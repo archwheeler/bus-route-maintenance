@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<project name="busRouteMaintenance" default="dist" basedir=".">
+
+    <!-- enter the SVN commit message -->
+    <property name="commit.message" value="Commit message"/>
+    <!-- enter the *lowest* JOSM version this plugin is currently compatible with -->
+    <property name="plugin.main.version" value="10580"/>
+
+    <property name="plugin.author" value="archwheeler"/>
+    <property name="plugin.class" value="busroutemaintenance.BusRouteMaintenancePlugin"/>
+    <property name="plugin.description" value="Bus Route Maintenance"/>
+    <property name="plugin.icon" value=""/> <!-- TODO? -->
+    <property name="plugin.link" value="https://github.com/archwheeler/osm-bus-maintenance"/>
+    <!--<property name="plugin.early" value="..."/>-->
+    <!--<property name="plugin.requires" value="..."/>-->
+    <!--<property name="plugin.stage" value="..."/>-->
+
+    <!-- ** include targets that all plugins have in common ** -->
+    <import file="../build-common.xml"/>
+  
+</project>
