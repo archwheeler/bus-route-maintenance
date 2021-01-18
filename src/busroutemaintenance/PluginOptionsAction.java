@@ -9,18 +9,17 @@ import org.openstreetmap.josm.actions.JosmAction;
 import org.openstreetmap.josm.tools.Shortcut;
 
 @SuppressWarnings("serial")
-public class ImportSiriDataAction extends JosmAction {
+public class PluginOptionsAction extends JosmAction {
 
-  public ImportSiriDataAction() {
-    super(tr("Import SIRI data"), "import", tr("Import SIRI data"),
-            Shortcut.registerShortcut("edit:importsiridata", tr("Edit: {0}", tr("Import SIRI data")),
-            KeyEvent.CHAR_UNDEFINED, Shortcut.NONE),
-            true);
+  public PluginOptionsAction() {
+    super(tr("Bus Route Maintenance options"), "options", tr("Bus Route Maintenance options"),
+            Shortcut.registerShortcut("edit:busroutemaintenanceoptions", tr("Edit: {0}",
+            tr("Bus Route Maintenance options")), KeyEvent.CHAR_UNDEFINED, Shortcut.NONE), true);
 }
   
   @Override
   public void actionPerformed(ActionEvent arg0) {
-    ImportSiriDataDialog dlg = new ImportSiriDataDialog();
+    PluginOptionsDialog dlg = new PluginOptionsDialog();
     if (dlg.getValue() == 1) {
         System.out.println("Button pressed");
     }
