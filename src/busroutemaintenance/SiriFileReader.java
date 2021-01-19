@@ -12,6 +12,7 @@ import java.nio.ByteOrder;
 import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.data.gpx.GpxData;
 import org.openstreetmap.josm.data.gpx.WayPoint;
+import org.openstreetmap.josm.gui.progress.ProgressMonitor;
 import org.openstreetmap.josm.io.IllegalDataException;
 
 public class SiriFileReader {
@@ -35,7 +36,7 @@ public class SiriFileReader {
     }
   }
 
-  public GpxData toGpx() throws IllegalDataException {
+  public GpxData toGpx(ProgressMonitor monitor) throws IllegalDataException {
     if (file == null || !isSiriFile(file))
       throw new IllegalDataException(tr("File is not a SIRI file"));
     
@@ -55,6 +56,7 @@ public class SiriFileReader {
         wpt = new WayPoint(new LatLon(buffer.getDouble(), buffer.getDouble()));
         wpt.setTimeInMillis(time);
         gpxData.addWaypoint(wpt);
+        monitor.worked(1);
       }
     } catch (Exception e) {
       throw new IllegalDataException(tr("Could not convert SIRI file to GPX"));
