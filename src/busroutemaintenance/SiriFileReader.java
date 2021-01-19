@@ -7,6 +7,7 @@ import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 
 import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.data.gpx.GpxData;
@@ -47,11 +48,12 @@ public class SiriFileReader {
       long time;
       ByteBuffer buffer;
       byte[] bytes = new byte[BUFFER_SIZE];
-      while(is.read(bytes) != -1) {
+      while(is.read(bytes) == BUFFER_SIZE) {
         buffer = ByteBuffer.wrap(bytes);
-        time = buffer.getLong();
+        buffer.order(ByteOrder.LITTLE_ENDIAN);
+        time = (long) buffer.getDouble();
         wpt = new WayPoint(new LatLon(buffer.getDouble(), buffer.getDouble()));
-        wpt.setTime(time);
+        wpt.setTimeInMillis(time);
         gpxData.addWaypoint(wpt);
       }
     } catch (Exception e) {
