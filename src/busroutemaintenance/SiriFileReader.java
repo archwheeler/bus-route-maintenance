@@ -44,12 +44,14 @@ public class SiriFileReader {
       is.skip(SIGNATURE_SIZE);
       
       WayPoint wpt;
+      long time;
       ByteBuffer buffer;
       byte[] bytes = new byte[BUFFER_SIZE];
       while(is.read(bytes) != -1) {
         buffer = ByteBuffer.wrap(bytes);
-        buffer.getInt(); // TODO: do we need time?
+        time = buffer.getLong();
         wpt = new WayPoint(new LatLon(buffer.getDouble(), buffer.getDouble()));
+        wpt.setTime(time);
         gpxData.addWaypoint(wpt);
       }
     } catch (Exception e) {
