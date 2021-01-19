@@ -16,7 +16,7 @@ public class BusRouteMaintenancePlugin extends Plugin {
     JMenu moreToolsMenu = MainApplication.getMenu().moreToolsMenu;
     MainMenu.add(moreToolsMenu, new PluginOptionsAction());
     
-    ExtensionFileFilter.addImporter(new SiriCSVImporter());
+    ExtensionFileFilter.addImporter(new SiriFileImporter());
   }
   
 }
