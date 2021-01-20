@@ -27,7 +27,7 @@ public class SiriFileReader {
   private static int SIGNATURE = 0x53495249;
   private static int SIGNATURE_SIZE = 8;
   private static int BUFFER_SIZE = 24;
-  private static double MAX_TIMESTEP = 1800.0; // 30 minutes
+  private static double MAX_TIMESTEP = 60.0; // 1 minute
   
   private File file;
   
