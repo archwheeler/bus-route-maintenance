@@ -11,6 +11,7 @@ import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 
@@ -76,6 +77,17 @@ public class SiriFileReader {
         gpxData.addWaypoint(current);
         monitor.worked(1);
       }
+      // Sort the waypoints by time
+      Collections.sort(waypoints, new Comparator<WayPoint>() {
+        public int compare(WayPoint w1, WayPoint w2) {
+          double time1 = w1.getTime();
+          double time2 = w2.getTime();
+          
+          if (time1 == time2)
+            return 0;
+          return time1 < time2 ? -1 : 1;
+        }
+      });
       
       List<IGpxTrackSegment> segments = new ArrayList<IGpxTrackSegment>();
       segments.add(new GpxTrackSegment(waypoints));
