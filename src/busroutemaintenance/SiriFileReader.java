@@ -9,17 +9,14 @@ import java.io.FileInputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
 
 import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.data.gpx.GpxData;
 import org.openstreetmap.josm.data.gpx.GpxTrack;
 import org.openstreetmap.josm.data.gpx.GpxTrackSegment;
-import org.openstreetmap.josm.data.gpx.IGpxTrack;
 import org.openstreetmap.josm.data.gpx.IGpxTrackSegment;
 import org.openstreetmap.josm.data.gpx.WayPoint;
 import org.openstreetmap.josm.gui.progress.ProgressMonitor;
@@ -30,6 +27,7 @@ public class SiriFileReader {
   private static int SIGNATURE = 0x53495249;
   private static int SIGNATURE_SIZE = 8;
   private static int BUFFER_SIZE = 24;
+  private static double MAX_TIMESTEP = 1800.0; // 30 minutes
   
   private File file;
   
@@ -89,8 +87,22 @@ public class SiriFileReader {
         }
       });
       
+      // Create a new segment if we experience a large difference in time
       List<IGpxTrackSegment> segments = new ArrayList<IGpxTrackSegment>();
-      segments.add(new GpxTrackSegment(waypoints));
+      List<WayPoint> segment = new ArrayList<WayPoint>();
+      double wptTime;
+      double prevTime = Double.MAX_VALUE;
+      for (WayPoint wpt : waypoints) {
+        wptTime = wpt.getTime();
+        if (wptTime - prevTime > MAX_TIMESTEP) {
+          segments.add(new GpxTrackSegment(segment));
+          segment = new ArrayList<WayPoint>();
+        }
+        segment.add(wpt);
+        prevTime = wptTime;
+      }
+      segments.add(new GpxTrackSegment(segment));
+      
       // TODO: assign attributes to track
       gpxData.addTrack(new GpxTrack(segments, Collections.<String, Object>emptyMap()));
       monitor.worked(1);
