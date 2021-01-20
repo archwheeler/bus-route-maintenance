@@ -30,9 +30,15 @@ public class SiriFileReader {
   private static double MAX_TIMESTEP = 60.0; // 1 minute
   
   private File file;
+  private ProgressMonitor monitor;
   
   public SiriFileReader(File file) {
     this.file = file;
+  }
+  
+  public SiriFileReader(File file, ProgressMonitor monitor) {
+    this.file = file;
+    this.monitor = monitor;
   }
   
   public static boolean isSiriFile(File file) {
@@ -43,8 +49,17 @@ public class SiriFileReader {
       return false;
     }
   }
+  
+  public void setProgressMonitor(ProgressMonitor monitor) {
+    this.monitor = monitor;
+    return;
+  }
+  
+  public ProgressMonitor getProgressMonitor() {
+    return this.monitor;
+  }
 
-  public GpxData toGpx(ProgressMonitor monitor) throws IllegalDataException {
+  public GpxData toGpx() throws IllegalDataException {
     if (file == null || !isSiriFile(file))
       throw new IllegalDataException(tr("File is not a SIRI file"));
     
@@ -73,7 +88,9 @@ public class SiriFileReader {
         
         waypoints.add(current);
         gpxData.addWaypoint(current);
-        monitor.worked(1);
+        
+        if (monitor != null)
+          monitor.worked(1);
       }
       // Sort the waypoints by time
       Collections.sort(waypoints, new Comparator<WayPoint>() {
@@ -105,7 +122,6 @@ public class SiriFileReader {
       
       // TODO: assign attributes to track
       gpxData.addTrack(new GpxTrack(segments, Collections.<String, Object>emptyMap()));
-      monitor.worked(1);
       
     } catch (Exception e) {
       throw new IllegalDataException(tr("Could not convert SIRI file to GPX"));

@@ -35,8 +35,8 @@ public class SiriFileImporter extends FileImporter {
     try {
       monitor.beginTask(String.format(tr("Importing SIRI file ''%s''..."), file.getName()));
       
-      SiriFileReader r = new SiriFileReader(file);
-      GpxData gpxData = r.toGpx(monitor);
+      SiriFileReader r = new SiriFileReader(file, monitor);
+      GpxData gpxData = r.toGpx();
       
       GpxLayer gpxLayer = new GpxLayer(gpxData, file.getName());
       MainApplication.getLayerManager().addLayer(gpxLayer);
