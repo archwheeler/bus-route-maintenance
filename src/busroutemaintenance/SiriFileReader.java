@@ -18,6 +18,7 @@ import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.data.gpx.GpxData;
 import org.openstreetmap.josm.data.gpx.GpxTrack;
 import org.openstreetmap.josm.data.gpx.GpxTrackSegment;
+import org.openstreetmap.josm.data.gpx.IGpxTrack;
 import org.openstreetmap.josm.data.gpx.IGpxTrackSegment;
 import org.openstreetmap.josm.data.gpx.WayPoint;
 import org.openstreetmap.josm.gui.progress.ProgressMonitor;
@@ -53,9 +54,8 @@ public class SiriFileReader {
       // Ignore the header information
       is.skip(SIGNATURE_SIZE);
       
-      WayPoint current = null;
-      WayPoint previous = null;
-      List<IGpxTrackSegment> segments = new ArrayList<IGpxTrackSegment>();
+      WayPoint current;
+      List<WayPoint> waypoints = new ArrayList<WayPoint>();
       long time;
       double lat;
       double lon;
@@ -69,17 +69,16 @@ public class SiriFileReader {
         lat = buffer.getDouble();
         lon = buffer.getDouble();
         
-        previous = current;
         current = new WayPoint(new LatLon(lat, lon));
         current.setTimeInMillis(time);
         
-        if (previous != null)
-          segments.add(new GpxTrackSegment(Arrays.asList(previous, current)));
-        
+        waypoints.add(current);
         gpxData.addWaypoint(current);
         monitor.worked(1);
       }
       
+      List<IGpxTrackSegment> segments = new ArrayList<IGpxTrackSegment>();
+      segments.add(new GpxTrackSegment(waypoints));
       // TODO: assign attributes to track
       gpxData.addTrack(new GpxTrack(segments, Collections.<String, Object>emptyMap()));
       monitor.worked(1);
