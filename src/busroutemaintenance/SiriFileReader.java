@@ -9,9 +9,8 @@ import java.io.FileInputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.Comparator;
 import java.util.List;
 
 import org.openstreetmap.josm.data.coor.LatLon;
@@ -28,6 +27,7 @@ public class SiriFileReader {
   private static int SIGNATURE = 0x53495249;
   private static int SIGNATURE_SIZE = 8;
   private static int BUFFER_SIZE = 24;
+  private static double MAX_TIMESTEP = 60.0; // 1 minute
   
   private File file;
   
@@ -53,9 +53,8 @@ public class SiriFileReader {
       // Ignore the header information
       is.skip(SIGNATURE_SIZE);
       
-      WayPoint current = null;
-      WayPoint previous = null;
-      List<IGpxTrackSegment> segments = new ArrayList<IGpxTrackSegment>();
+      WayPoint current;
+      List<WayPoint> waypoints = new ArrayList<WayPoint>();
       long time;
       double lat;
       double lon;
@@ -69,16 +68,40 @@ public class SiriFileReader {
         lat = buffer.getDouble();
         lon = buffer.getDouble();
         
-        previous = current;
         current = new WayPoint(new LatLon(lat, lon));
         current.setTimeInMillis(time);
         
-        if (previous != null)
-          segments.add(new GpxTrackSegment(Arrays.asList(previous, current)));
-        
+        waypoints.add(current);
         gpxData.addWaypoint(current);
         monitor.worked(1);
       }
+      // Sort the waypoints by time
+      Collections.sort(waypoints, new Comparator<WayPoint>() {
+        public int compare(WayPoint w1, WayPoint w2) {
+          double time1 = w1.getTime();
+          double time2 = w2.getTime();
+          
+          if (time1 == time2)
+            return 0;
+          return time1 < time2 ? -1 : 1;
+        }
+      });
+      
+      // Create a new segment if we experience a large difference in time
+      List<IGpxTrackSegment> segments = new ArrayList<IGpxTrackSegment>();
+      List<WayPoint> segment = new ArrayList<WayPoint>();
+      double wptTime;
+      double prevTime = Double.MAX_VALUE;
+      for (WayPoint wpt : waypoints) {
+        wptTime = wpt.getTime();
+        if (wptTime - prevTime > MAX_TIMESTEP) {
+          segments.add(new GpxTrackSegment(segment));
+          segment = new ArrayList<WayPoint>();
+        }
+        segment.add(wpt);
+        prevTime = wptTime;
+      }
+      segments.add(new GpxTrackSegment(segment));
       
       // TODO: assign attributes to track
       gpxData.addTrack(new GpxTrack(segments, Collections.<String, Object>emptyMap()));
