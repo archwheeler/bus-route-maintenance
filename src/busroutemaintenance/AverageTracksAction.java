@@ -9,17 +9,17 @@ import org.openstreetmap.josm.actions.JosmAction;
 import org.openstreetmap.josm.tools.Shortcut;
 
 @SuppressWarnings("serial")
-public class PluginOptionsAction extends JosmAction {
+public class AverageTracksAction extends JosmAction {
 
-  public PluginOptionsAction() {
-    super(tr("Bus Route Maintenance options"), "options", tr("Bus Route Maintenance options"),
+  public AverageTracksAction() {
+    super(tr("Average GPX tracks"), "average", tr("Average GPX tracks"),
             Shortcut.registerShortcut("edit:busroutemaintenanceoptions", tr("Edit: {0}",
-            tr("Bus Route Maintenance options")), KeyEvent.CHAR_UNDEFINED, Shortcut.NONE), true);
+            tr("Average GPX tracks")), KeyEvent.CHAR_UNDEFINED, Shortcut.NONE), true);
 }
   
   @Override
   public void actionPerformed(ActionEvent arg0) {
-    PluginOptionsDialog dlg = new PluginOptionsDialog();
+    AverageTracksDialog dlg = new AverageTracksDialog();
     if (dlg.getValue() == 1) {
         System.out.println("Button pressed");
     }
