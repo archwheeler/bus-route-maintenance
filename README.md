@@ -1,7 +1,5 @@
 # OpenStreetMap bus-route maintenance using GPS data 
 
-A [project](https://www.cst.cam.ac.uk/teaching/part-ii/projects) for Part II of the Computer Science Tripos at Cambridge.
-
 ## Introduction
 
 Bus-routes are constantly changing as new bus services are created, old bus services are retired, and active bus services are updated. The current route map system is poorly equipped to reflect this dynamic environment, consisting of an outdated and static map being replicated at each stop, thereby requiring an unrealistic effort to update. A new route map is desperately needed; one that can be found at a single location and is easily modifiable.
