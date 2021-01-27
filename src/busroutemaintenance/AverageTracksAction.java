@@ -21,6 +21,7 @@ import org.openstreetmap.josm.data.gpx.GpxTrackSegment;
 import org.openstreetmap.josm.data.gpx.IGpxTrackSegment;
 import org.openstreetmap.josm.data.gpx.WayPoint;
 import org.openstreetmap.josm.gui.layer.GpxLayer;
+import org.openstreetmap.josm.gui.layer.Layer;
 import org.openstreetmap.josm.gui.layer.MainLayerManager;
 import org.openstreetmap.josm.gui.util.GuiHelper;
 import org.openstreetmap.josm.io.IllegalDataException;
@@ -144,19 +145,25 @@ public class AverageTracksAction extends JosmAction {
   
   @Override
   public void actionPerformed(ActionEvent arg0) {
-    AverageTracksDialog dlg = new AverageTracksDialog();
     MainLayerManager layerManager = MainApplication.getLayerManager();
+    Layer currentLayer = layerManager.getActiveLayer();
+    if (currentLayer == null) {
+      GuiHelper.runInEDT(() -> JOptionPane.showMessageDialog(null,
+          tr("No active layer found."), tr("Error"),
+          JOptionPane.WARNING_MESSAGE));
+      return;
+    }
+    
+    AverageTracksDialog dlg = new AverageTracksDialog(currentLayer.getName());
     
     // if "Ok" pressed
     if (dlg.getValue() == 1) {
-      GpxLayer currentLayer;
       GpxData currentData;
       try {
-        currentLayer = (GpxLayer) layerManager.getActiveLayer();
-        currentData = (GpxData) currentLayer.getData();
+        currentData = (GpxData) ((GpxLayer) currentLayer).getData();
       } catch (Exception e) {
         GuiHelper.runInEDT(() -> JOptionPane.showMessageDialog(null,
-            tr("Error loading GPX data from current layer."), tr("Error"),
+            tr("Error loading GPX data from the active layer."), tr("Error"),
             JOptionPane.WARNING_MESSAGE));
         return;
       }
