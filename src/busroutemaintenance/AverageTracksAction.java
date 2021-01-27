@@ -31,6 +31,7 @@ import org.openstreetmap.josm.tools.Shortcut;
 public class AverageTracksAction extends JosmAction {
   
   private static Color AVERAGE_COLOUR = Color.green;
+  private static double MAX_DISTANCE = 1E-6;
 
   public AverageTracksAction() {
     super(tr("Average GPX tracks"), "average", tr("Average GPX tracks"),
@@ -87,7 +88,10 @@ public class AverageTracksAction extends JosmAction {
       }
     }
     
-    return projection;
+    if (minDistance < MAX_DISTANCE)
+      return projection;
+    else
+      return null;
   }
   
   private static GpxData averageTracks(GpxData data) throws IllegalDataException {
@@ -114,7 +118,7 @@ public class AverageTracksAction extends JosmAction {
                                           .collect(Collectors.toList());
     
     // Create an averageSegment containing the average of the closest points to each point in base
-    double totalSegments = segments.size();
+    double totalSegments;
     double totalLat;
     double totalLon;
     WayPoint closest;
@@ -122,10 +126,14 @@ public class AverageTracksAction extends JosmAction {
     for (WayPoint point : base.getWayPoints()) {
       totalLat = 0.0;
       totalLon = 0.0;
+      totalSegments = 0.0;
       for (IGpxTrackSegment segment : segments) {
         closest = projectWayPointOnSegment(point, segment);
-        totalLat += closest.lat();
-        totalLon += closest.lon();
+        if (closest != null) {
+          totalLat += closest.lat();
+          totalLon += closest.lon();
+          totalSegments += 1.0;
+        }
       }
       averageSegment.add(new WayPoint(new LatLon(totalLat/totalSegments, totalLon/totalSegments)));
     }
