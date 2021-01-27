@@ -47,51 +47,47 @@ public class AverageTracksAction extends JosmAction {
     if (totalPoints == 1)
       return new WayPoint(points.get(0));
     
+    LatLon pointCoor = point.getCoor();
     double lat = point.lat();
     double lon = point.lon();
-    WayPoint a;
     WayPoint b = points.get(0);
-    double alat;
-    double alon;
-    double blat = b.lat();
-    double blon = b.lon();
+    double bLat = b.lat();
+    double bLon = b.lon();
     WayPoint projection = null;
-    LatLon current;
-    double k;
     double minDistance = Double.MAX_VALUE;
-    double distance;
-    LatLon pointCoor = point.getCoor();
     for (int i = 1; i != totalPoints; ++i) {
-      a = b;
-      alat = blat;
-      alon = blon;
+      // Get the next line segment a->b
+      WayPoint a = b;
+      Double aLat = bLat;
+      Double aLon = bLon;
       b = points.get(i);
-      blat = b.lat();
-      blon = b.lon();
+      bLat = b.lat();
+      bLon = b.lon();
       
-      k = ((blon-alon)*(lat-alat) - (blat-alat)*(lon-alon)) /
-          (Math.pow(blon-alon, 2) + Math.pow(blat-alat, 2));
-      current = new LatLon(lat - k*(blon-alon), lon + k*(blat-alat));
+      // Project the point onto the line a->b
+      double k = ((bLon-aLon)*(lat-aLat) - (bLat-aLat)*(lon-aLon)) /
+          (Math.pow(bLon-aLon, 2) + Math.pow(bLat-aLat, 2));
+      LatLon projCoor = new LatLon(lat - k*(bLon-aLon), lon + k*(bLat-aLat));
       
-      if (current.lat() < Math.min(alat, blat) || current.lat() > Math.max(alat, blat)) {
+      // If the projection isn't on the line segment a->b, set it to the closest out of a and b
+      if (projCoor.lat() < Math.min(aLat, bLat) || projCoor.lat() > Math.max(aLat, bLat)) {
         if (pointCoor.distanceSq(a.getCoor()) <= pointCoor.distanceSq(b.getCoor())) {
-          current = a.getCoor();
+          projCoor = a.getCoor();
         } else {
-          current = b.getCoor();
+          projCoor = b.getCoor();
         }
       }
       
-      distance = current.distanceSq(pointCoor);
+      // If this projection is the closest found so far, update our projection
+      double distance = projCoor.distanceSq(pointCoor);
       if (distance < minDistance) {
         minDistance = distance;
-        projection = new WayPoint(current);
+        projection = new WayPoint(projCoor);
       }
     }
     
-    if (minDistance < MAX_DISTANCE)
-      return projection;
-    else
-      return null;
+    // Only return a projection if it's reasonably close to our original point
+    return (minDistance < MAX_DISTANCE) ? projection : null;
   }
   
   private static GpxData averageTracks(GpxData data) throws IllegalDataException {
