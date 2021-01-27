@@ -100,11 +100,11 @@ public class AverageTracksAction extends JosmAction {
     if (data.getTrackSegsCount() < 2)
       throw new IllegalDataException(tr("Not enough segments to compute average"));
     
-    // Our base track is the track with the most waypoints
+    // Our base track is the track with the longest distance
     IGpxTrackSegment base = data.getTrackSegmentsStream().max(new Comparator<IGpxTrackSegment>() {
       public int compare(IGpxTrackSegment t1, IGpxTrackSegment t2) {
-        int len1 = t1.getWayPoints().size();
-        int len2 = t2.getWayPoints().size();
+        double len1 = t1.length();
+        double len2 = t2.length();
         
         if (len1 == len2)
           return 0;
