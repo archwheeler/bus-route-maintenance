@@ -99,8 +99,8 @@ public class AverageTracksAction extends JosmAction {
     // Our base track is the track with the most waypoints
     IGpxTrackSegment base = data.getTrackSegmentsStream().max(new Comparator<IGpxTrackSegment>() {
       public int compare(IGpxTrackSegment t1, IGpxTrackSegment t2) {
-        double len1 = t1.length();
-        double len2 = t2.length();
+        int len1 = t1.getWayPoints().size();
+        int len2 = t2.getWayPoints().size();
         
         if (len1 == len2)
           return 0;
