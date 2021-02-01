@@ -13,7 +13,6 @@ import java.util.stream.Collectors;
 
 import javax.swing.JOptionPane;
 
-import org.openstreetmap.josm.actions.JosmAction;
 import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.data.gpx.GpxData;
 import org.openstreetmap.josm.data.gpx.GpxTrack;
@@ -22,14 +21,12 @@ import org.openstreetmap.josm.data.gpx.IGpxTrackSegment;
 import org.openstreetmap.josm.data.gpx.WayPoint;
 import org.openstreetmap.josm.gui.layer.GpxLayer;
 import org.openstreetmap.josm.gui.layer.Layer;
-import org.openstreetmap.josm.gui.layer.MainLayerManager;
 import org.openstreetmap.josm.gui.util.GuiHelper;
 import org.openstreetmap.josm.io.IllegalDataException;
-import org.openstreetmap.josm.gui.MainApplication;
 import org.openstreetmap.josm.tools.Shortcut;
 
 @SuppressWarnings("serial")
-public class AverageTracksAction extends JosmAction {
+public class AverageTracksAction extends JosmActiveLayerAction {
   
   private static Color AVERAGE_COLOUR = Color.green;
   private static double MAX_DISTANCE = 1E-6;
@@ -145,22 +142,19 @@ public class AverageTracksAction extends JosmAction {
   
   @Override
   public void actionPerformed(ActionEvent arg0) {
-    MainLayerManager layerManager = MainApplication.getLayerManager();
-    Layer currentLayer = layerManager.getActiveLayer();
-    if (currentLayer == null) {
-      GuiHelper.runInEDT(() -> JOptionPane.showMessageDialog(null,
-          tr("No active layer found."), tr("Error"),
-          JOptionPane.WARNING_MESSAGE));
+    Layer activeLayer = getActiveLayer();
+    if (activeLayer == null) {
+      noActiveLayerError();
       return;
     }
     
-    AverageTracksDialog dlg = new AverageTracksDialog(currentLayer.getName());
+    AverageTracksDialog dlg = new AverageTracksDialog(activeLayer.getName());
     
     // if "Ok" pressed
     if (dlg.getValue() == 1) {
-      GpxData currentData;
+      GpxData activeData;
       try {
-        currentData = (GpxData) ((GpxLayer) currentLayer).getData();
+        activeData = (GpxData) ((GpxLayer) activeLayer).getData();
       } catch (Exception e) {
         GuiHelper.runInEDT(() -> JOptionPane.showMessageDialog(null,
             tr("Error loading GPX data from the active layer."), tr("Error"),
@@ -169,8 +163,8 @@ public class AverageTracksAction extends JosmAction {
       }
       
       try {
-        GpxLayer averageLayer = new GpxLayer(averageTracks(currentData),
-            String.format("%s AVG", currentLayer.getName()));
+        GpxLayer averageLayer = new GpxLayer(averageTracks(activeData),
+            String.format("%s AVG", activeLayer.getName()));
         averageLayer.setColor(AVERAGE_COLOUR);
         layerManager.addLayer(averageLayer);
       } catch (IllegalDataException e) {
