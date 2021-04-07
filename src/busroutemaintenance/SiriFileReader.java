@@ -27,7 +27,6 @@ public class SiriFileReader {
   private static int SIGNATURE = 0x53495249;
   private static int SIGNATURE_SIZE = 8;
   private static int BUFFER_SIZE = 24;
-  private static double MAX_TIMESTEP = 300.0; // 5 minutes
   
   private File file;
   private ProgressMonitor monitor;
@@ -105,22 +104,13 @@ public class SiriFileReader {
       });
       
       // Create a new segment if we experience a large difference in time
-      List<IGpxTrackSegment> segments = new ArrayList<IGpxTrackSegment>();
       List<WayPoint> segment = new ArrayList<WayPoint>();
-      double wptTime;
-      double prevTime = Double.MAX_VALUE;
       for (WayPoint wpt : waypoints) {
-        wptTime = wpt.getTime();
-        if (wptTime - prevTime > MAX_TIMESTEP) {
-          segments.add(new GpxTrackSegment(segment));
-          segment = new ArrayList<WayPoint>();
-        }
         segment.add(wpt);
-        prevTime = wptTime;
       }
-      segments.add(new GpxTrackSegment(segment));
       
-      // TODO: assign attributes to track
+      List<IGpxTrackSegment> segments = new ArrayList<IGpxTrackSegment>();
+      segments.add(new GpxTrackSegment(segment));
       gpxData.addTrack(new GpxTrack(segments, Collections.<String, Object>emptyMap()));
       
     } catch (Exception e) {
