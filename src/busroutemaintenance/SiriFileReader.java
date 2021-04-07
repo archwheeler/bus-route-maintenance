@@ -103,7 +103,6 @@ public class SiriFileReader {
         }
       });
       
-      // Create a new segment if we experience a large difference in time
       List<WayPoint> segment = new ArrayList<WayPoint>();
       for (WayPoint wpt : waypoints) {
         segment.add(wpt);
