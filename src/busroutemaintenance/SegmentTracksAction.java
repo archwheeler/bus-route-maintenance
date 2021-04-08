@@ -134,7 +134,11 @@ public class SegmentTracksAction extends JosmActiveLayerAction implements MouseL
     
     activeData.beginUpdate();
     activeData.removeTrack(track);
-    activeData.addTrack(new GpxTrack(segments, Collections.<String, Object>emptyMap()));
+    for (IGpxTrackSegment s : segments) {
+      List<IGpxTrackSegment> singleSegment = new ArrayList<IGpxTrackSegment>();
+      singleSegment.add(s);
+      activeData.addTrack(new GpxTrack(singleSegment, Collections.<String, Object>emptyMap()));
+    }
     activeData.endUpdate();
   }
   
