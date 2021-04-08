@@ -33,7 +33,7 @@ import org.openstreetmap.josm.tools.Shortcut;
 @SuppressWarnings("serial")
 public class SegmentTracksAction extends JosmActiveLayerAction implements MouseListener {
 
-  private static final double MARKER_RANGE = 10.0;
+  private static final double MARKER_RANGE = 1e-3;
   private static final double MIN_ROUTE_TIME = 1800.0;
   private static final double MEAN_THRESHOLD = 0.50;
   
