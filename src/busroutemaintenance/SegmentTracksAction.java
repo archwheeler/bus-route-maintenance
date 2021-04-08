@@ -36,6 +36,7 @@ public class SegmentTracksAction extends JosmActiveLayerAction implements MouseL
   private static final double MARKER_RANGE = 1e-3;
   private static final double MIN_ROUTE_TIME = 1800.0;
   private static final double MEAN_THRESHOLD = 0.50;
+  private static final double MAX_TIMESTEP = 900.0;
   
   private enum Mode {
     None, Start, End
@@ -125,13 +126,17 @@ public class SegmentTracksAction extends JosmActiveLayerAction implements MouseL
     List<IGpxTrackSegment> segments = new ArrayList<IGpxTrackSegment>();
     List<WayPoint> segment = new ArrayList<WayPoint>();
     double meanLength = 0.0;
+    double wptTime;
+    double prevTime = Double.MAX_VALUE;
     for (WayPoint wpt : waypoints) {
-      if (splits.contains(wpt)) {
+      wptTime = wpt.getTime();
+      if (splits.contains(wpt) || wptTime - prevTime > MAX_TIMESTEP) {
         IGpxTrackSegment s = new GpxTrackSegment(segment);
         segments.add(s);
         meanLength += s.length();
         segment = new ArrayList<WayPoint>();
       }
+      prevTime = wptTime;
       segment.add(wpt);
     }
     IGpxTrackSegment s = new GpxTrackSegment(segment);
