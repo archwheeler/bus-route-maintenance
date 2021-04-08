@@ -5,7 +5,9 @@ import static org.openstreetmap.josm.tools.I18n.tr;
 import javax.swing.JOptionPane;
 
 import org.openstreetmap.josm.actions.JosmAction;
+import org.openstreetmap.josm.data.gpx.GpxData;
 import org.openstreetmap.josm.gui.MainApplication;
+import org.openstreetmap.josm.gui.layer.GpxLayer;
 import org.openstreetmap.josm.gui.layer.Layer;
 import org.openstreetmap.josm.gui.layer.MainLayerManager;
 import org.openstreetmap.josm.gui.util.GuiHelper;
@@ -29,5 +31,18 @@ public abstract class JosmActiveLayerAction extends JosmAction {
   
   public Layer getActiveLayer() {
     return layerManager.getActiveLayer();
+  }
+  
+  public GpxData getActiveData(Layer activeLayer) {
+    GpxData activeData;
+    try {
+      activeData = (GpxData) ((GpxLayer) activeLayer).getData();
+    } catch (Exception e) {
+      GuiHelper.runInEDT(() -> JOptionPane.showMessageDialog(null,
+          tr("Error loading GPX data from the active layer."), tr("Error"),
+          JOptionPane.WARNING_MESSAGE));
+      return null;
+    }
+    return activeData;
   }
 }

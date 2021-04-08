@@ -38,15 +38,7 @@ public class AverageTracksAction extends JosmActiveLayerAction {
     
     // if "Ok" pressed
     if (dlg.getValue() == 1) {
-      GpxData activeData;
-      try {
-        activeData = (GpxData) ((GpxLayer) activeLayer).getData();
-      } catch (Exception e) {
-        GuiHelper.runInEDT(() -> JOptionPane.showMessageDialog(null,
-            tr("Error loading GPX data from the active layer."), tr("Error"),
-            JOptionPane.WARNING_MESSAGE));
-        return;
-      }
+      GpxData activeData = getActiveData(activeLayer);
       
       try {
         GpxLayer averageLayer = new GpxLayer(averageTracksAlgorithm.averageTracks(activeData),
