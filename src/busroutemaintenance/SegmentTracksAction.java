@@ -12,7 +12,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 
 import javax.swing.JOptionPane;
@@ -92,7 +91,6 @@ public class SegmentTracksAction extends JosmActiveLayerAction implements MouseL
     Collection<WayPoint> waypoints = track.getSegments().iterator().next().getWayPoints();
     
     for (LatLon marker : markers) {
-      List<WayPoint> newSplits = new LinkedList<WayPoint>();
       List<WayPoint> nearMarker = new ArrayList<WayPoint>();
       for (WayPoint waypoint : waypoints) {
         if (marker.distance(waypoint.getCoor()) <= MARKER_RANGE)
@@ -110,17 +108,15 @@ public class SegmentTracksAction extends JosmActiveLayerAction implements MouseL
       });
       for (WayPoint waypoint : nearMarker) {
         boolean validSplit = true;
-        for (WayPoint s : newSplits) {
+        for (WayPoint s : splits) {
           if (Math.abs(s.getTime() - waypoint.getTime()) <= MIN_ROUTE_TIME) {
             validSplit = false;
             break;
           }
         }
         if (validSplit)
-          newSplits.add(waypoint);
+          splits.add(waypoint);
       }
-      
-      splits.addAll(newSplits);
     }
     
     List<IGpxTrackSegment> segments = new ArrayList<IGpxTrackSegment>();
@@ -144,7 +140,6 @@ public class SegmentTracksAction extends JosmActiveLayerAction implements MouseL
     meanLength += s.length();
     
     meanLength /= segments.size();
-    System.out.print(meanLength);
     
     activeData.beginUpdate();
     activeData.removeTrack(track);
