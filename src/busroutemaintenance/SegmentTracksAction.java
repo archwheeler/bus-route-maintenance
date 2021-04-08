@@ -33,8 +33,9 @@ import org.openstreetmap.josm.tools.Shortcut;
 @SuppressWarnings("serial")
 public class SegmentTracksAction extends JosmActiveLayerAction implements MouseListener {
 
-  private static final double MARKER_RANGE = 10.0; // 10 meters
-  private static final double MIN_ROUTE_TIME = 900.0; // 15 minutes
+  private static final double MARKER_RANGE = 10.0;
+  private static final double MIN_ROUTE_TIME = 1800.0;
+  private static final double MEAN_THRESHOLD = 0.50;
   
   private enum Mode {
     None, Start, End
@@ -123,21 +124,31 @@ public class SegmentTracksAction extends JosmActiveLayerAction implements MouseL
     
     List<IGpxTrackSegment> segments = new ArrayList<IGpxTrackSegment>();
     List<WayPoint> segment = new ArrayList<WayPoint>();
+    double meanLength = 0.0;
     for (WayPoint wpt : waypoints) {
       if (splits.contains(wpt)) {
-        segments.add(new GpxTrackSegment(segment));
+        IGpxTrackSegment s = new GpxTrackSegment(segment);
+        segments.add(s);
+        meanLength += s.length();
         segment = new ArrayList<WayPoint>();
       }
       segment.add(wpt);
     }
-    segments.add(new GpxTrackSegment(segment));
+    IGpxTrackSegment s = new GpxTrackSegment(segment);
+    segments.add(s);
+    meanLength += s.length();
+    
+    meanLength /= segments.size();
+    System.out.print(meanLength);
     
     activeData.beginUpdate();
     activeData.removeTrack(track);
-    for (IGpxTrackSegment s : segments) {
-      List<IGpxTrackSegment> singleSegment = new ArrayList<IGpxTrackSegment>();
-      singleSegment.add(s);
-      activeData.addTrack(new GpxTrack(singleSegment, Collections.<String, Object>emptyMap()));
+    for (IGpxTrackSegment seg : segments) {
+      if (Math.abs(seg.length()/meanLength - 1.0) <= MEAN_THRESHOLD) {
+        List<IGpxTrackSegment> singleSegment = new ArrayList<IGpxTrackSegment>();
+        singleSegment.add(seg);
+        activeData.addTrack(new GpxTrack(singleSegment, Collections.<String, Object>emptyMap()));
+      }
     }
     activeData.endUpdate();
   }
