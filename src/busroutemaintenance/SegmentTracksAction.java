@@ -167,6 +167,7 @@ public class SegmentTracksAction extends JosmActiveLayerAction implements MouseL
         return;
         
       case Start:
+        mode = Mode.None;
         markers.add(coordsAtCursor(e.getPoint()));
         if (isLinear) {
           PlaceMarkerDialog endDlg = new PlaceMarkerDialog(tr("end"));
@@ -175,14 +176,14 @@ public class SegmentTracksAction extends JosmActiveLayerAction implements MouseL
           }
         } else {
           segmentData();
-          mode = Mode.None;
         }
         return;
         
       case End:
+        mode = Mode.None;
+        map.mapView.removeMouseListener(this);
         markers.add(coordsAtCursor(e.getPoint()));
         segmentData();
-        mode = Mode.None;
         return;
         
       default:
