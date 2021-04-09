@@ -34,7 +34,7 @@ public class SegmentTracksAction extends JosmActiveLayerAction implements MouseL
 
   private static final double MARKER_RANGE = 1e-3;
   private static final double MIN_ROUTE_TIME = 1800.0;
-  private static final double MEAN_THRESHOLD = 0.50;
+  private static final double MEDIAN_THRESHOLD = 0.50;
   private static final double MAX_TIMESTEP = 900.0;
   
   private enum Mode {
@@ -129,26 +129,28 @@ public class SegmentTracksAction extends JosmActiveLayerAction implements MouseL
     
     List<IGpxTrackSegment> segments = new ArrayList<IGpxTrackSegment>();
     List<WayPoint> segment = new ArrayList<WayPoint>();
-    double meanLength = 0.0;
     for (WayPoint wpt : waypoints) {
       segment.add(wpt);
       if (splits.contains(wpt)) {
         IGpxTrackSegment s = new GpxTrackSegment(segment);
         segments.add(s);
-        meanLength += s.length();
         segment = new ArrayList<WayPoint>();
       }
     }
     IGpxTrackSegment s = new GpxTrackSegment(segment);
     segments.add(s);
-    meanLength += s.length();
     
-    meanLength /= segments.size();
+    List<Double> lengths = new ArrayList<Double>();
+    for (IGpxTrackSegment seg : segments) {
+      lengths.add(seg.length());
+    }
+    Collections.sort(lengths);
+    double medianLength = lengths.get(lengths.size() / 2);
     
     activeData.beginUpdate();
     activeData.removeTrack(track);
     for (IGpxTrackSegment seg : segments) {
-      if (Math.abs(seg.length()/meanLength - 1.0) <= MEAN_THRESHOLD) {
+      if (Math.abs(seg.length()/medianLength - 1.0) <= MEDIAN_THRESHOLD) {
         List<IGpxTrackSegment> singleSegment = new ArrayList<IGpxTrackSegment>();
         singleSegment.add(seg);
         activeData.addTrack(new GpxTrack(singleSegment, Collections.<String, Object>emptyMap()));
