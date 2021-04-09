@@ -90,14 +90,12 @@ public class SegmentTracksAction extends JosmActiveLayerAction implements MouseL
     IGpxTrack track = activeData.getTracks().iterator().next();
     Collection<WayPoint> waypoints = track.getSegments().iterator().next().getWayPoints();
     
-    double wptTime;
-    double prevTime = Double.MAX_VALUE;
+    WayPoint prevWpt = null;
     for (WayPoint wpt : waypoints) {
-      wptTime = wpt.getTime();
-      if (wptTime - prevTime > MAX_TIMESTEP) {
-        splits.add(wpt);
+      if (prevWpt != null && wpt.getTime() - prevWpt.getTime() > MAX_TIMESTEP) {
+        splits.add(prevWpt);
       }
-      prevTime = wptTime;
+      prevWpt = wpt;
     }
     
     for (LatLon marker : markers) {
@@ -133,13 +131,13 @@ public class SegmentTracksAction extends JosmActiveLayerAction implements MouseL
     List<WayPoint> segment = new ArrayList<WayPoint>();
     double meanLength = 0.0;
     for (WayPoint wpt : waypoints) {
+      segment.add(wpt);
       if (splits.contains(wpt)) {
         IGpxTrackSegment s = new GpxTrackSegment(segment);
         segments.add(s);
         meanLength += s.length();
         segment = new ArrayList<WayPoint>();
       }
-      segment.add(wpt);
     }
     IGpxTrackSegment s = new GpxTrackSegment(segment);
     segments.add(s);
