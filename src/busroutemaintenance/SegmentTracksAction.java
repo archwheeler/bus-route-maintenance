@@ -34,7 +34,7 @@ public class SegmentTracksAction extends JosmActiveLayerAction implements MouseL
 
   private static final double MARKER_RANGE = 1e-3;
   private static final double MIN_ROUTE_TIME = 1800.0;
-  private static final double MEDIAN_THRESHOLD = 0.50;
+  private static final double MEDIAN_THRESHOLD = 0.10;
   private static final double MAX_TIMESTEP = 900.0;
   
   private enum Mode {
