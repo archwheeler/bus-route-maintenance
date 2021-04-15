@@ -181,6 +181,7 @@ public class SegmentTracksAction extends JosmActiveLayerAction implements MouseL
             mode = Mode.End;
           }
         } else {
+          map.mapView.removeMouseListener(this);
           segmentData();
         }
         return;
