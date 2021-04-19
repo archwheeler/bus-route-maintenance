@@ -18,7 +18,7 @@ import org.openstreetmap.josm.tools.Shortcut;
 public class AverageTracksAction extends JosmActiveLayerAction {
   
   private static Color AVERAGE_COLOUR = Color.green;
-  private AverageTracksAlgorithm averageTracksAlgorithm = new BasicAverageTracks();
+  private AverageTracksAlgorithm averageTracksAlgorithm = new DivideConquerAverageTracks();
 
   public AverageTracksAction() {
     super(tr("Average GPX tracks"), "average", tr("Average GPX tracks"),
