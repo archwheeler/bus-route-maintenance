@@ -132,10 +132,8 @@ public class DivideConquerAverageTracks implements AverageTracksAlgorithm {
       double processedLength = 0.0;
       WayPoint previous = null;
       for (WayPoint next : waypoints) {
-        if (previous != null) {
+        if (previous != null)
           processedLength += 1e5 * previous.getCoor().distance(next.getCoor());
-          System.out.println(previous.getCoor().distance(next.getCoor()));
-        }
         if (processedLength >= midLength)
           break;
         previous = next;
