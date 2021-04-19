@@ -24,7 +24,7 @@ public class DivideConquerAverageTracks implements AverageTracksAlgorithm {
   private static int M = 1;
   private static int D = 2;
   private static double THRESHOLD = 1;
-  private static double MEDIAN_THRESHOLD = 0.9;
+  private static double MEDIAN_THRESHOLD = 0.05;
   private static int KMEANS_ITERATIONS = 10;
   
   private static LatLon[] kMeans(List<LatLon> data, int k, int iterations) {
