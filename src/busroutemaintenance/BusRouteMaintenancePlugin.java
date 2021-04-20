@@ -9,6 +9,7 @@ import org.openstreetmap.josm.plugins.Plugin;
 import org.openstreetmap.josm.plugins.PluginInformation;
 
 import busroutemaintenance.actions.AverageTracksAction;
+import busroutemaintenance.actions.MaintenanceAction;
 import busroutemaintenance.actions.SegmentTracksAction;
 
 public class BusRouteMaintenancePlugin extends Plugin {
@@ -19,6 +20,7 @@ public class BusRouteMaintenancePlugin extends Plugin {
     JMenu dataMenu = MainApplication.getMenu().dataMenu;
     MainMenu.add(dataMenu, new AverageTracksAction());
     MainMenu.add(dataMenu, new SegmentTracksAction());
+    MainMenu.add(dataMenu, new MaintenanceAction());
     
     ExtensionFileFilter.addImporter(new SiriFileImporter());
   }
