@@ -18,8 +18,8 @@ public class BusRouteMaintenancePlugin extends Plugin {
     super(info);
     
     JMenu dataMenu = MainApplication.getMenu().dataMenu;
-    MainMenu.add(dataMenu, new AverageTracksAction());
     MainMenu.add(dataMenu, new SegmentTracksAction());
+    MainMenu.add(dataMenu, new AverageTracksAction());
     MainMenu.add(dataMenu, new MaintenanceAction());
     
     ExtensionFileFilter.addImporter(new SiriFileImporter());
