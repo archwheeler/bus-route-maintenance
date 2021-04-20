@@ -1,4 +1,4 @@
-package busroutemaintenance;
+package busroutemaintenance.actions;
 
 import static org.openstreetmap.josm.tools.I18n.tr;
 
@@ -13,6 +13,10 @@ import org.openstreetmap.josm.gui.layer.Layer;
 import org.openstreetmap.josm.gui.util.GuiHelper;
 import org.openstreetmap.josm.io.IllegalDataException;
 import org.openstreetmap.josm.tools.Shortcut;
+
+import busroutemaintenance.AverageTracksAlgorithm;
+import busroutemaintenance.DivideConquerAverageTracks;
+import busroutemaintenance.dialogs.AverageTracksDialog;
 
 @SuppressWarnings("serial")
 public class AverageTracksAction extends JosmActiveLayerAction {

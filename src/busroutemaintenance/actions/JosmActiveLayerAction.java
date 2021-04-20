@@ -1,4 +1,4 @@
-package busroutemaintenance;
+package busroutemaintenance.actions;
 
 import static org.openstreetmap.josm.tools.I18n.tr;
 

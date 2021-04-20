@@ -8,6 +8,9 @@ import org.openstreetmap.josm.gui.MainMenu;
 import org.openstreetmap.josm.plugins.Plugin;
 import org.openstreetmap.josm.plugins.PluginInformation;
 
+import busroutemaintenance.actions.AverageTracksAction;
+import busroutemaintenance.actions.SegmentTracksAction;
+
 public class BusRouteMaintenancePlugin extends Plugin {
   
   public BusRouteMaintenancePlugin(PluginInformation info) {

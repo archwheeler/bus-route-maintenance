@@ -1,4 +1,4 @@
-package busroutemaintenance;
+package busroutemaintenance.actions;
 
 import static org.openstreetmap.josm.tools.I18n.tr;
 
@@ -28,6 +28,9 @@ import org.openstreetmap.josm.gui.MapFrame;
 import org.openstreetmap.josm.gui.layer.Layer;
 import org.openstreetmap.josm.gui.util.GuiHelper;
 import org.openstreetmap.josm.tools.Shortcut;
+
+import busroutemaintenance.dialogs.PlaceMarkerDialog;
+import busroutemaintenance.dialogs.SegmentTracksDialog;
 
 @SuppressWarnings("serial")
 public class SegmentTracksAction extends JosmActiveLayerAction implements MouseListener {
