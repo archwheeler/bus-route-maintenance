@@ -10,7 +10,7 @@ import org.openstreetmap.josm.plugins.PluginInformation;
 
 import busroutemaintenance.actions.AverageTracksAction;
 import busroutemaintenance.actions.MaintenanceAction;
-import busroutemaintenance.actions.SegmentTracksAction;
+import busroutemaintenance.actions.SegmentTrackAction;
 
 public class BusRouteMaintenancePlugin extends Plugin {
   
@@ -18,7 +18,7 @@ public class BusRouteMaintenancePlugin extends Plugin {
     super(info);
     
     JMenu dataMenu = MainApplication.getMenu().dataMenu;
-    MainMenu.add(dataMenu, new SegmentTracksAction());
+    MainMenu.add(dataMenu, new SegmentTrackAction());
     MainMenu.add(dataMenu, new AverageTracksAction());
     MainMenu.add(dataMenu, new MaintenanceAction());
     

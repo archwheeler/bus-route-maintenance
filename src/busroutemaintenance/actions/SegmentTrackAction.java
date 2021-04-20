@@ -30,10 +30,10 @@ import org.openstreetmap.josm.gui.util.GuiHelper;
 import org.openstreetmap.josm.tools.Shortcut;
 
 import busroutemaintenance.dialogs.PlaceMarkerDialog;
-import busroutemaintenance.dialogs.SegmentTracksDialog;
+import busroutemaintenance.dialogs.SegmentTrackDialog;
 
 @SuppressWarnings("serial")
-public class SegmentTracksAction extends JosmActiveLayerAction implements MouseListener {
+public class SegmentTrackAction extends JosmActiveLayerAction implements MouseListener {
 
   private static final double MARKER_RANGE = 1e-3;
   private static final double MIN_ROUTE_TIME = 1800.0;
@@ -49,7 +49,7 @@ public class SegmentTracksAction extends JosmActiveLayerAction implements MouseL
   private GpxData activeData;
   private List<LatLon> markers;
 
-  public SegmentTracksAction() {
+  public SegmentTrackAction() {
     super(tr("Segment GPX track"), "segment", tr("Segment GPX track"),
         Shortcut.registerShortcut("edit:busroutemaintenanceoptions", tr("Edit: {0}",
         tr("Segment GPX track")), KeyEvent.CHAR_UNDEFINED, Shortcut.NONE), true);
@@ -63,7 +63,7 @@ public class SegmentTracksAction extends JosmActiveLayerAction implements MouseL
       return;
     }
     
-    SegmentTracksDialog dlg = new SegmentTracksDialog(activeLayer.getName());
+    SegmentTrackDialog dlg = new SegmentTrackDialog(activeLayer.getName());
     
     // if "Ok" pressed
     if (dlg.getValue() == 1) {

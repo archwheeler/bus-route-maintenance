@@ -13,7 +13,7 @@ import javax.swing.JRadioButton;
 import org.openstreetmap.josm.tools.GBC;
 
 @SuppressWarnings("serial")
-public class SegmentTracksDialog extends BasicDialog {
+public class SegmentTrackDialog extends BasicDialog {
   
   private final JPanel panel = new JPanel(new GridBagLayout());
   private final JLabel choiceLabel = new JLabel("Is the GPX track linear or cyclic?",
@@ -24,7 +24,7 @@ public class SegmentTracksDialog extends BasicDialog {
   
   private boolean isLinear = true;
   
-  public SegmentTracksDialog(String layerName) {
+  public SegmentTrackDialog(String layerName) {
     super(tr("Segment GPX track"));
     
     panel.add(choiceLabel, GBC.eol().fill(GBC.HORIZONTAL));
