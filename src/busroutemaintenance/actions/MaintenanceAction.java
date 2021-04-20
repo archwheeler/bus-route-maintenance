@@ -38,7 +38,11 @@ public class MaintenanceAction extends JosmActiveLayerAction {
     // if "Ok" pressed
     if (dlg.getValue() == 1) {
       GpxData activeData = getActiveData(activeLayer);
-      System.out.println("GPX data read.");
+      if (activeData.getTrackCount() != 1) {
+        GuiHelper.runInEDT(() -> JOptionPane.showMessageDialog(null,
+            tr("Expected a single track"), tr("Error"), JOptionPane.WARNING_MESSAGE));
+        return;
+      }
     }
     
     return;
