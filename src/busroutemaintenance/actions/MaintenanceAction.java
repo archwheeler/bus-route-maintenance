@@ -2,11 +2,9 @@ package busroutemaintenance.actions;
 
 import static org.openstreetmap.josm.tools.I18n.tr;
 
-import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -15,8 +13,6 @@ import java.util.Set;
 import org.openstreetmap.josm.data.Bounds;
 import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.data.gpx.GpxData;
-import org.openstreetmap.josm.data.gpx.GpxTrack;
-import org.openstreetmap.josm.data.gpx.GpxTrackSegment;
 import org.openstreetmap.josm.data.gpx.IGpxTrack;
 import org.openstreetmap.josm.data.gpx.IGpxTrackSegment;
 import org.openstreetmap.josm.data.gpx.WayPoint;
@@ -25,8 +21,9 @@ import org.openstreetmap.josm.data.osm.Node;
 import org.openstreetmap.josm.data.osm.OsmPrimitiveType;
 import org.openstreetmap.josm.data.osm.Relation;
 import org.openstreetmap.josm.data.osm.RelationMember;
-import org.openstreetmap.josm.gui.layer.GpxLayer;
+import org.openstreetmap.josm.data.osm.Way;
 import org.openstreetmap.josm.gui.layer.Layer;
+import org.openstreetmap.josm.gui.layer.OsmDataLayer;
 import org.openstreetmap.josm.gui.progress.ProgressMonitor;
 import org.openstreetmap.josm.gui.progress.swing.PleaseWaitProgressMonitor;
 import org.openstreetmap.josm.io.OsmTransferException;
@@ -44,7 +41,7 @@ public class MaintenanceAction extends JosmActiveLayerAction {
   private static final String OVERPASS_SERVER = "https://lz4.overpass-api.de/api/";
   private static final String OVERPASS_QUERY = "relation[type=route][route=bus](%f,%f,%f,%f); "
                                              + "(._;>;); out meta;";
-  private static Color ROUTE_COLOUR = Color.red;
+  private Layer activeLayer;
 
   public MaintenanceAction() {
     super(tr("Bus route maintenance"), "maintenance", tr("Bus route maintenance"),
@@ -174,29 +171,41 @@ public class MaintenanceAction extends JosmActiveLayerAction {
   }
   
   void displayRelation(Relation relation) {
-    List<WayPoint> segment = new ArrayList<WayPoint>();
-    for (RelationMember w : relation.getMembers()) {
-      OsmPrimitiveType type = w.getType(); 
+    DataSet data = relation.getDataSet();
+    for (Relation r : data.getRelations()) {
+      if (!r.equals(relation)) {
+        data.removePrimitive(r);
+      }
+    }
+    Set<Way> ways = new HashSet<Way>();
+    Set<Node> nodes = new HashSet<Node>();
+    for (RelationMember m : relation.getMembers()) {
+      OsmPrimitiveType type = m.getType(); 
       if (type == OsmPrimitiveType.WAY) {
-        for (Node n : w.getWay().getNodes()) {
-          segment.add(new WayPoint(n.getCoor()));
+        Way w = m.getWay();
+        ways.add(w);
+        for (Node n : w.getNodes()) {
+          nodes.add(n);
         }
       }
     }
+    for (Way w : data.getWays()) {
+      if (!ways.contains(w))
+        data.removePrimitive(w);
+    }
+    for (Node n : data.getNodes()) {
+      if (!nodes.contains(n))
+        data.removePrimitive(n);
+    }
     
-    GpxData data = new GpxData();
-    List<IGpxTrackSegment> segments = new ArrayList<IGpxTrackSegment>();
-    segments.add(new GpxTrackSegment(segment));
-    data.addTrack(new GpxTrack(segments, Collections.<String, Object>emptyMap()));
-    GpxLayer dataLayer = new GpxLayer(data, getActiveLayer().getName() + " OSM");
-    
-    dataLayer.setColor(ROUTE_COLOUR);
-    layerManager.addLayer(dataLayer);
+    OsmDataLayer layer = new OsmDataLayer(data, String.format("%s OSM", activeLayer.getName()),
+                                          null);
+    layerManager.addLayer(layer);
   }
 
   @Override
   public void actionPerformed(ActionEvent arg0) {
-    Layer activeLayer = getActiveLayer();
+    activeLayer = getActiveLayer();
     if (activeLayer == null) {
       noActiveLayerError();
       return;
