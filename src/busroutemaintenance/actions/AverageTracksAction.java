@@ -5,17 +5,15 @@ import static org.openstreetmap.josm.tools.I18n.tr;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
-import javax.swing.JOptionPane;
-
 import org.openstreetmap.josm.data.gpx.GpxData;
 import org.openstreetmap.josm.gui.layer.GpxLayer;
 import org.openstreetmap.josm.gui.layer.Layer;
-import org.openstreetmap.josm.gui.util.GuiHelper;
 import org.openstreetmap.josm.io.IllegalDataException;
 import org.openstreetmap.josm.tools.Shortcut;
 
 import busroutemaintenance.AverageTracksAlgorithm;
 import busroutemaintenance.DivideConquerAverageTracks;
+import busroutemaintenance.Utils;
 import busroutemaintenance.dialogs.AverageTracksDialog;
 
 @SuppressWarnings("serial")
@@ -50,8 +48,7 @@ public class AverageTracksAction extends JosmActiveLayerAction {
         averageLayer.setColor(AVERAGE_COLOUR);
         layerManager.addLayer(averageLayer);
       } catch (IllegalDataException e) {
-        GuiHelper.runInEDT(() -> JOptionPane.showMessageDialog(null,
-            String.format("%s", e.getMessage()), tr("Error"), JOptionPane.WARNING_MESSAGE));
+        Utils.displayError(e.getMessage());
       }
     }
     

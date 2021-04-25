@@ -4,15 +4,12 @@ import static org.openstreetmap.josm.tools.I18n.tr;
 
 import java.io.File;
 
-import javax.swing.JOptionPane;
-
 import org.openstreetmap.josm.actions.ExtensionFileFilter;
 import org.openstreetmap.josm.data.gpx.GpxData;
 import org.openstreetmap.josm.gui.MainApplication;
 import org.openstreetmap.josm.gui.io.importexport.FileImporter;
 import org.openstreetmap.josm.gui.layer.GpxLayer;
 import org.openstreetmap.josm.gui.progress.ProgressMonitor;
-import org.openstreetmap.josm.gui.util.GuiHelper;
 import org.openstreetmap.josm.io.IllegalDataException;
 
 public class SiriFileImporter extends FileImporter {
@@ -42,9 +39,8 @@ public class SiriFileImporter extends FileImporter {
       MainApplication.getLayerManager().addLayer(gpxLayer);
       monitor.worked(1);
     } catch (IllegalDataException e) {
-      GuiHelper.runInEDT(() -> JOptionPane.showMessageDialog(null,
-          String.format(tr("Error loading SIRI file ''%s'':\n%s"), file.getName(),
-          e.getMessage()), tr("Error"), JOptionPane.WARNING_MESSAGE));
+      Utils.displayError(String.format(tr("Error loading SIRI file ''%s'':\n%s"), file.getName(),
+          e.getMessage()));
     } finally {
       monitor.finishTask();
     }

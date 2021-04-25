@@ -13,6 +13,8 @@ import org.openstreetmap.josm.gui.layer.MainLayerManager;
 import org.openstreetmap.josm.gui.util.GuiHelper;
 import org.openstreetmap.josm.tools.Shortcut;
 
+import busroutemaintenance.Utils;
+
 @SuppressWarnings("serial")
 public abstract class JosmActiveLayerAction extends JosmAction {
   
@@ -38,9 +40,7 @@ public abstract class JosmActiveLayerAction extends JosmAction {
     try {
       activeData = (GpxData) ((GpxLayer) activeLayer).getData();
     } catch (Exception e) {
-      GuiHelper.runInEDT(() -> JOptionPane.showMessageDialog(null,
-          tr("Error loading GPX data from the active layer."), tr("Error"),
-          JOptionPane.WARNING_MESSAGE));
+      Utils.displayError(tr("Error loading GPX data from the active layer."));
       return null;
     }
     return activeData;

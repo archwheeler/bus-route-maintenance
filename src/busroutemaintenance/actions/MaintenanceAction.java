@@ -12,8 +12,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-import javax.swing.JOptionPane;
-
 import org.openstreetmap.josm.data.Bounds;
 import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.data.gpx.GpxData;
@@ -31,11 +29,11 @@ import org.openstreetmap.josm.gui.layer.GpxLayer;
 import org.openstreetmap.josm.gui.layer.Layer;
 import org.openstreetmap.josm.gui.progress.ProgressMonitor;
 import org.openstreetmap.josm.gui.progress.swing.PleaseWaitProgressMonitor;
-import org.openstreetmap.josm.gui.util.GuiHelper;
 import org.openstreetmap.josm.io.OsmTransferException;
 import org.openstreetmap.josm.io.OverpassDownloadReader;
 import org.openstreetmap.josm.tools.Shortcut;
 
+import busroutemaintenance.Utils;
 import busroutemaintenance.dialogs.MaintenanceDialog;
 import gov.nasa.worldwind.geom.Angle;
 import gov.nasa.worldwind.geom.coords.MGRSCoord;
@@ -210,8 +208,7 @@ public class MaintenanceAction extends JosmActiveLayerAction {
     if (dlg.getValue() == 1) {
       GpxData activeData = getActiveData(activeLayer);
       if (activeData.getTrackCount() != 1) {
-        GuiHelper.runInEDT(() -> JOptionPane.showMessageDialog(null,
-            tr("Expected a single track"), tr("Error"), JOptionPane.WARNING_MESSAGE));
+        Utils.displayError(tr("Expected a single track"));
         return;
       }
       
@@ -220,8 +217,7 @@ public class MaintenanceAction extends JosmActiveLayerAction {
       try {
         closestRoute = findClosestRoute(activeTrack);
       } catch (OsmTransferException e) {
-        GuiHelper.runInEDT(() -> JOptionPane.showMessageDialog(null,
-            e.getMessage(), tr("Error"), JOptionPane.WARNING_MESSAGE));
+        Utils.displayError(e.getMessage());
         return;
       }
       

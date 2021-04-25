@@ -14,8 +14,6 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 
-import javax.swing.JOptionPane;
-
 import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.data.gpx.GpxData;
 import org.openstreetmap.josm.data.gpx.GpxTrack;
@@ -26,9 +24,9 @@ import org.openstreetmap.josm.data.gpx.WayPoint;
 import org.openstreetmap.josm.gui.MainApplication;
 import org.openstreetmap.josm.gui.MapFrame;
 import org.openstreetmap.josm.gui.layer.Layer;
-import org.openstreetmap.josm.gui.util.GuiHelper;
 import org.openstreetmap.josm.tools.Shortcut;
 
+import busroutemaintenance.Utils;
 import busroutemaintenance.dialogs.PlaceMarkerDialog;
 import busroutemaintenance.dialogs.SegmentTrackDialog;
 
@@ -69,8 +67,7 @@ public class SegmentTrackAction extends JosmActiveLayerAction implements MouseLi
     if (dlg.getValue() == 1) {
       activeData = getActiveData(activeLayer);
       if (activeData.getTrackCount() != 1) {
-        GuiHelper.runInEDT(() -> JOptionPane.showMessageDialog(null,
-            tr("Expected a single track"), tr("Error"), JOptionPane.WARNING_MESSAGE));
+        Utils.displayError(tr("Expected a single track"));
         return;
       }
       
