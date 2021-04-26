@@ -32,8 +32,6 @@ import org.openstreetmap.josm.tools.Shortcut;
 
 import busroutemaintenance.Utils;
 import busroutemaintenance.dialogs.MaintenanceDialog;
-import gov.nasa.worldwind.geom.Angle;
-import gov.nasa.worldwind.geom.coords.MGRSCoord;
 
 @SuppressWarnings("serial")
 public class MaintenanceAction extends JosmActiveLayerAction {
@@ -96,13 +94,11 @@ public class MaintenanceAction extends JosmActiveLayerAction {
     }
     List<String> cells = new ArrayList<String>();
     for (LatLon p : points) {
-      String cell = MGRSCoord.fromLatLon(Angle.fromDegreesLatitude(p.lat()),
-                                         Angle.fromDegreesLongitude(p.lon()), 4).toString();
+      String cell = Utils.getMGRSCoord(p.lat(), p.lon());
       String[] components = cell.split(" ");
       String squareID = components[0];
-      Integer easting = 2 * Integer.parseInt(components[1]) / 5;
-      Integer northing = 2 * Integer.parseInt(components[2]) / 5;
-      cell = squareID + " " + easting.toString() + " " + northing.toString();
+      Integer easting = Integer.parseInt(components[1]);
+      Integer northing = Integer.parseInt(components[2]);
       List<String> previouslySeen = H.get(easting)
                                      .get(northing);
       if (previouslySeen == null) {
