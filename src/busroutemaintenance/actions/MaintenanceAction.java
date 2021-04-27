@@ -30,6 +30,7 @@ import org.openstreetmap.josm.io.OsmTransferException;
 import org.openstreetmap.josm.io.OverpassDownloadReader;
 import org.openstreetmap.josm.tools.Shortcut;
 
+import busroutemaintenance.Maintenance;
 import busroutemaintenance.Utils;
 import busroutemaintenance.dialogs.MaintenanceDialog;
 import busroutemaintenance.gui.MaintenanceLayer;
@@ -41,6 +42,10 @@ public class MaintenanceAction extends JosmActiveLayerAction {
   private static final String OVERPASS_QUERY = "relation[type=route][route=bus](%f,%f,%f,%f); "
                                              + "(._;>;); out meta;";
   private Layer activeLayer;
+  private IGpxTrack track;
+  private List<String> trackCells;
+  private Relation relation;
+  private List<String> relationCells;
 
   public MaintenanceAction() {
     super(tr("Bus route maintenance"), "maintenance", tr("Bus route maintenance"),
@@ -48,7 +53,7 @@ public class MaintenanceAction extends JosmActiveLayerAction {
         tr("Bus route maintenance")), KeyEvent.CHAR_UNDEFINED, Shortcut.NONE), true);
   }
   
-  Bounds boundTrack(IGpxTrack track) {
+  Bounds boundTrack() {
     double minLat = Double.POSITIVE_INFINITY;
     double minLon = Double.POSITIVE_INFINITY;
     double maxLat = Double.NEGATIVE_INFINITY;
@@ -71,8 +76,8 @@ public class MaintenanceAction extends JosmActiveLayerAction {
     return new Bounds(minLat, minLon, maxLat, maxLon); // Add wiggle room?
   }
   
-  DataSet getNearbyRoutes(IGpxTrack track) throws OsmTransferException {
-    Bounds bounds = boundTrack(track);
+  DataSet getNearbyRoutes() throws OsmTransferException {
+    Bounds bounds = boundTrack();
     OverpassDownloadReader reader = new OverpassDownloadReader(bounds, OVERPASS_SERVER,
         String.format(OVERPASS_QUERY, bounds.getMinLat(), bounds.getMinLon(),
                                       bounds.getMaxLat(), bounds.getMaxLon()));
@@ -150,24 +155,21 @@ public class MaintenanceAction extends JosmActiveLayerAction {
     return (double) intersection.size() / (double) union.size();
   }
   
-  Relation findClosestRoute(IGpxTrack track) throws OsmTransferException {
-    List<String> trackCells = routeToCells(track);
-    DataSet osmData = getNearbyRoutes(track);
+  void findClosestRelation() throws OsmTransferException {
+    DataSet osmData = getNearbyRoutes();
     double maxSimilarity = Double.NEGATIVE_INFINITY;
-    Relation closest = null;
     for (Relation r : osmData.getRelations()) {
-      List<String> relationCells = routeToCells(r);
+      relationCells = routeToCells(r);
       double similarity = cellsSimilarity(trackCells, relationCells);
       if (similarity > maxSimilarity) {
         maxSimilarity = similarity;
-        closest = r;
+        relation = r;
       }
       System.out.println(String.format("%.2f", similarity));
     }
-    return closest;
   }
   
-  void displayRelation(Relation relation) {
+  void displayRelation() {
     DataSet data = relation.getDataSet();
     for (Relation r : data.getRelations()) {
       if (!r.equals(relation)) {
@@ -218,25 +220,23 @@ public class MaintenanceAction extends JosmActiveLayerAction {
         return;
       }
       
-      IGpxTrack activeTrack = activeData.getTracks().iterator().next();
-      Relation closestRoute;
+      track = activeData.getTracks().iterator().next();
+      trackCells = routeToCells(track);
       try {
-        closestRoute = findClosestRoute(activeTrack);
+        findClosestRelation();
       } catch (OsmTransferException e) {
         Utils.displayError(e.getMessage());
         return;
       }
       
-      // TEST CODE:
-      System.out.println("Active route:\n" + routeToCells(activeTrack));
-      if (closestRoute != null) {
-        System.out.println("Closest route:\n" + routeToCells(closestRoute));
-        displayRelation(closestRoute);
+      if (relation != null) {
+        displayRelation();
+        List<Maintenance> maintenance = new ArrayList<Maintenance>();
+        // TODO compute required maintenance
+        Layer maintenanceLayer = new MaintenanceLayer(maintenance, relation);
       } else {
-        System.out.println("No closest route found");
+        // TODO create new relation from track
       }
-      
-      Layer maintenanceLayer = new MaintenanceLayer(null);
     }
     
     return;
