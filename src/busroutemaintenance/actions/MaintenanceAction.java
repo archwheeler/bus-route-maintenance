@@ -32,6 +32,7 @@ import org.openstreetmap.josm.tools.Shortcut;
 
 import busroutemaintenance.Utils;
 import busroutemaintenance.dialogs.MaintenanceDialog;
+import busroutemaintenance.gui.MaintenanceLayer;
 
 @SuppressWarnings("serial")
 public class MaintenanceAction extends JosmActiveLayerAction {
@@ -234,6 +235,8 @@ public class MaintenanceAction extends JosmActiveLayerAction {
       } else {
         System.out.println("No closest route found");
       }
+      
+      Layer maintenanceLayer = new MaintenanceLayer(null);
     }
     
     return;
