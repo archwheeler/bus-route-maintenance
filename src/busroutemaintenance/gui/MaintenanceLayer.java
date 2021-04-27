@@ -95,7 +95,8 @@ public class MaintenanceLayer extends Layer implements MouseListener {
 
   @Override
   public void mouseClicked(MouseEvent e) {
-    if (e.getButton() != MouseEvent.BUTTON1) // active layer check?
+    if (e.getButton() != MouseEvent.BUTTON1 ||
+        !MainApplication.getLayerManager().getActiveLayer().equals(this))
       return;
     Point click = e.getPoint();
     for (Maintenance m : maintenance) {
