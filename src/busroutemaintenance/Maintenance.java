@@ -19,17 +19,19 @@ public class Maintenance {
     this.end = end;
     this.addWays = addWays;
   }
-  
+
   public Node getStartNode() {
-    return start.firstNode();
+    return (start != null) ? start.firstNode() : addWays.get(0).firstNode();
   }
 
   public void carryOut(Relation relation) {
     List<RelationMember> newMembers = relation.getMembers();
     int index = 0;
-    while (!newMembers.get(index).refersTo(start))
+    if (start != null) {
+      while (!newMembers.get(index).refersTo(start))
+        ++index;
       ++index;
-    ++index;
+    }
     while (index < newMembers.size() && !newMembers.get(index).refersTo(end))
       newMembers.remove(index);
     for (Way w : addWays)
