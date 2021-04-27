@@ -2,7 +2,9 @@ package busroutemaintenance.gui;
 
 import static org.openstreetmap.josm.tools.I18n.tr;
 
+import java.awt.Color;
 import java.awt.Graphics2D;
+import java.awt.Point;
 import java.util.List;
 
 import javax.swing.Action;
@@ -10,6 +12,7 @@ import javax.swing.Icon;
 
 import org.openstreetmap.josm.actions.RenameLayerAction;
 import org.openstreetmap.josm.data.Bounds;
+import org.openstreetmap.josm.data.osm.Node;
 import org.openstreetmap.josm.data.osm.visitor.BoundingXYVisitor;
 import org.openstreetmap.josm.gui.MainApplication;
 import org.openstreetmap.josm.gui.MapView;
@@ -31,8 +34,13 @@ public class MaintenanceLayer extends Layer {
   }
 
   @Override
-  public void paint(Graphics2D arg0, MapView arg1, Bounds arg2) {
-    return;
+  public void paint(Graphics2D g, MapView mv, Bounds bounds) {
+    for (Maintenance m : maintenance) {
+      Node startNode = m.getStartNode();
+      Point startPoint = mv.getPoint(startNode);
+      g.setColor(Color.RED);
+      g.drawRect(startPoint.x, startPoint.y, 10, 10);
+    }
   }
 
   @Override

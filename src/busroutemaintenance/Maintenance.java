@@ -3,6 +3,7 @@ package busroutemaintenance;
 import java.util.List;
 import org.openstreetmap.josm.command.ChangeCommand;
 import org.openstreetmap.josm.data.UndoRedoHandler;
+import org.openstreetmap.josm.data.osm.Node;
 import org.openstreetmap.josm.data.osm.Relation;
 import org.openstreetmap.josm.data.osm.RelationMember;
 import org.openstreetmap.josm.data.osm.Way;
@@ -17,6 +18,10 @@ public class Maintenance {
     this.start = start;
     this.end = end;
     this.addWays = addWays;
+  }
+  
+  public Node getStartNode() {
+    return start.firstNode();
   }
 
   public void carryOut(Relation relation) {
