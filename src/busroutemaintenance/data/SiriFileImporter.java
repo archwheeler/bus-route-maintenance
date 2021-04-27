@@ -1,4 +1,4 @@
-package busroutemaintenance;
+package busroutemaintenance.data;
 
 import static org.openstreetmap.josm.tools.I18n.tr;
 
@@ -11,6 +11,8 @@ import org.openstreetmap.josm.gui.io.importexport.FileImporter;
 import org.openstreetmap.josm.gui.layer.GpxLayer;
 import org.openstreetmap.josm.gui.progress.ProgressMonitor;
 import org.openstreetmap.josm.io.IllegalDataException;
+
+import busroutemaintenance.Utils;
 
 public class SiriFileImporter extends FileImporter {
 

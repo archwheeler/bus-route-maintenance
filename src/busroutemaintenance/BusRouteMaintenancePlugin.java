@@ -11,6 +11,7 @@ import org.openstreetmap.josm.plugins.PluginInformation;
 import busroutemaintenance.actions.AverageTracksAction;
 import busroutemaintenance.actions.MaintenanceAction;
 import busroutemaintenance.actions.SegmentTrackAction;
+import busroutemaintenance.data.SiriFileImporter;
 
 public class BusRouteMaintenancePlugin extends Plugin {
   
