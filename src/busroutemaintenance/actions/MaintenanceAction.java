@@ -6,6 +6,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -35,6 +36,7 @@ import busroutemaintenance.Maintenance;
 import busroutemaintenance.Match;
 import busroutemaintenance.Utils;
 import busroutemaintenance.dialogs.MaintenanceDialog;
+import busroutemaintenance.gui.MaintenanceLayer;
 
 @SuppressWarnings("serial")
 public class MaintenanceAction extends JosmActiveLayerAction {
@@ -47,6 +49,7 @@ public class MaintenanceAction extends JosmActiveLayerAction {
                                                  + "[highway!=pedestrian][highway!=steps]"
                                                  + "[highway!=track][highway!=path]"
                                                  + "(%f,%f,%f,%f); (._;>;); out meta;";
+  private static enum Step {MATCH, INSERT, DELETE};
   
   private Layer activeLayer;
   private Relation trackRelation;
@@ -240,8 +243,96 @@ public class MaintenanceAction extends JosmActiveLayerAction {
   }
   
   List<Maintenance> computeMaintenance() {
+    List<Way> trackList = getRelationWays(trackRelation);
+    List<Way> osmList = getRelationWays(osmRelation);
+    int[][] scores = new int[trackList.size()+1][osmList.size()+1];
+    Step[][] steps = new Step[trackList.size()+1][osmList.size()+1];
+    for (int track = 1; track < trackList.size()+1; ++track) {
+      for (int osm = 1; osm < osmList.size()+1; ++osm) {
+        int maxScore = 0;
+        Step bestStep = null;
+        if (trackList.get(track-1).equals(osmList.get(osm-1)) &&
+            scores[track-1][osm-1] + 1 > maxScore) {
+          maxScore = scores[track-1][osm-1] + 1;
+          bestStep = Step.MATCH;
+        }
+        if (scores[track-1][osm] > maxScore) {
+          maxScore = scores[track-1][osm];
+          bestStep = Step.INSERT;
+        }
+        if (scores[track][osm-1] > maxScore) {
+          maxScore = scores[track][osm-1];
+          bestStep = Step.DELETE;
+        }
+        scores[track][osm] = maxScore;
+        steps[track][osm] = bestStep;
+      }
+    }
+    
+    List<Way> alignTrack = new ArrayList<Way>();
+    List<Way> alignOsm = new ArrayList<Way>();
+    int track = trackList.size();
+    int osm = osmList.size();
+    while (track > 0 && osm > 0) {
+      Step step = steps[track][osm];
+      switch (step) {
+      case MATCH:
+        alignTrack.add(trackList.get(track-1));
+        alignOsm.add(osmList.get(osm-1));
+        --track;
+        --osm;
+        break;
+      case DELETE:
+        alignTrack.add(null);
+        alignOsm.add(osmList.get(osm-1));
+        --osm;
+        break;
+      case INSERT:
+        alignTrack.add(trackList.get(track-1));
+        alignOsm.add(null);
+        --track;
+        break;
+      }
+    }
+    for (int i = track-1; i >= 0; --i)
+      alignTrack.add(trackList.get(i));
+    for (int i = 0; i < osm; ++i)
+      alignTrack.add(null);
+    Collections.reverse(alignTrack);
+    
+    for (int i = osm-1; i >= 0; --i)
+      alignOsm.add(osmList.get(i));
+    for (int i = 0; i < track; ++i)
+      alignOsm.add(null);
+    Collections.reverse(alignOsm);
+    
     List<Maintenance> maintenance = new ArrayList<Maintenance>();
-
+    List<Way> addList = new ArrayList<Way>();
+    Way start = null;
+    int gap = 0;
+    boolean jointEnd = false;
+    for (int index = 0; index < alignTrack.size(); ++index) {
+      Way trackWay = alignTrack.get(index);
+      Way osmWay = alignOsm.get(index);
+      jointEnd = false;
+      if (trackWay == null) {
+        ++gap;
+      } else if (trackWay.equals(osmWay)) {
+        if (gap > 0) {
+          maintenance.add(new Maintenance(start, trackWay, addList));
+          addList = new ArrayList<Way>();
+        }
+        jointEnd = true;
+        start = trackWay;
+        gap = 0;
+      } else {
+        ++gap;
+        addList.add(trackWay);
+      }
+    }
+    if (!jointEnd)
+      maintenance.add(new Maintenance(start, null, addList));
+    
     return maintenance;
   }
 
@@ -280,6 +371,8 @@ public class MaintenanceAction extends JosmActiveLayerAction {
         return;
       }
       
+      List<Maintenance> maintenance = computeMaintenance();
+      Layer maintenanceLayer = new MaintenanceLayer(maintenance, osmRelation);
     }
     
     return;
