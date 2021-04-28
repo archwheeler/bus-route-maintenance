@@ -16,7 +16,6 @@ import org.openstreetmap.josm.data.gpx.GpxData;
 import org.openstreetmap.josm.data.gpx.IGpxTrack;
 import org.openstreetmap.josm.data.gpx.IGpxTrackSegment;
 import org.openstreetmap.josm.data.gpx.WayPoint;
-import org.openstreetmap.josm.data.osm.BBox;
 import org.openstreetmap.josm.data.osm.DataSet;
 import org.openstreetmap.josm.data.osm.Node;
 import org.openstreetmap.josm.data.osm.OsmPrimitiveType;
@@ -41,7 +40,10 @@ public class MaintenanceAction extends JosmActiveLayerAction {
   private static final String OVERPASS_SERVER = "https://lz4.overpass-api.de/api/";
   private static final String OVERPASS_RELATION_QUERY = "relation[type=route][route=bus]"
                                                       + "(%f,%f,%f,%f); (._;>;); out meta;";
-  private static final String OVERPASS_WAY_QUERY = "way[highway](%f,%f,%f,%f); (._;>;); out meta;";
+  private static final String OVERPASS_WAY_QUERY = "way[highway][highway!=service]"
+                                                 + "[highway!=footway][highway!=cycleway]"
+                                                 + "[highway!=pedestrian][highway!=steps]"
+                                                 + "(%f,%f,%f,%f); (._;>;); out meta;";
   
   private Layer activeLayer;
   private Relation trackRelation;
@@ -74,12 +76,6 @@ public class MaintenanceAction extends JosmActiveLayerAction {
       }
     }
     return new Bounds(minLat, minLon, maxLat, maxLon);
-  }
-  
-  Bounds getBounds(Relation relation) {
-    BBox bbox = relation.getBBox();
-    return new Bounds(bbox.getTopLeftLat(), bbox.getBottomRightLon(),
-                      bbox.getBottomRightLat(), bbox.getTopLeftLon());
   }
   
   DataSet getOsmData(Bounds bounds, String query) throws OsmTransferException {
@@ -118,8 +114,8 @@ public class MaintenanceAction extends JosmActiveLayerAction {
     return (double) intersection.size() / (double) union.size();
   }
   
-  Relation findClosestRelation(Relation relation) throws OsmTransferException {
-    DataSet osmData = getOsmData(getBounds(relation), OVERPASS_RELATION_QUERY);
+  Relation findClosestRelation(Relation relation, Bounds bounds) throws OsmTransferException {
+    DataSet osmData = getOsmData(bounds, OVERPASS_RELATION_QUERY);
     double maxSimilarity = Double.NEGATIVE_INFINITY;
     Relation closestRelation = null;
     for (Relation r : osmData.getRelations()) {
@@ -133,19 +129,22 @@ public class MaintenanceAction extends JosmActiveLayerAction {
     return closestRelation;
   }
   
-  Relation trackToRelation(IGpxTrack track) throws OsmTransferException {
-    DataSet osmData = getOsmData(getBounds(track), OVERPASS_WAY_QUERY);
+  Relation trackToRelation(IGpxTrack track, Bounds bounds) throws OsmTransferException {
+    DataSet osmData = getOsmData(bounds, OVERPASS_WAY_QUERY);
     Collection<Way> allWays = osmData.getWays();
     List<Way> relationWays = new ArrayList<Way>();
     Way previousWay = null;
+    LatLon prevCoor = null;
+    LatLon coor = null;
     for (IGpxTrackSegment s : track.getSegments()) {
       for (WayPoint w : s.getWayPoints()) {
-        LatLon wCoor = w.getCoor();
+        prevCoor = coor;
+        coor = w.getCoor();
         double minDistance = Double.POSITIVE_INFINITY;
         Way closestWay = null;
         for (Way way : allWays) {
           for (Node n : way.getNodes()) {
-            double distance = wCoor.distance(n.getCoor());
+            double distance = coor.distance(n.getCoor());
             if (distance < minDistance) {
               minDistance = distance;
               closestWay = way;
@@ -153,12 +152,11 @@ public class MaintenanceAction extends JosmActiveLayerAction {
           }
         }
         if (!closestWay.equals(previousWay)) {
-          if (relationWays.contains(closestWay)) {
-            int index = 0;
-            while (!relationWays.get(index++).equals(closestWay));
-            while (index < relationWays.size())
-              relationWays.remove(index);
-          } else {
+          LatLon firstCoor = closestWay.getNode(0).getCoor();
+          LatLon secondCoor = closestWay.getNode(1).getCoor();
+          if (prevCoor == null ||
+              Math.abs(prevCoor.bearing(coor) - firstCoor.bearing(secondCoor)) < Math.PI / 4.0 ||
+              Math.abs(prevCoor.bearing(coor) - secondCoor.bearing(firstCoor)) < Math.PI / 4.0) {
             relationWays.add(closestWay);
             previousWay = closestWay;
           }
@@ -232,14 +230,21 @@ public class MaintenanceAction extends JosmActiveLayerAction {
       }
       
       IGpxTrack track = activeData.getTracks().iterator().next();
+      Bounds bounds = getBounds(track);
       try {
-        trackRelation = trackToRelation(track);
+        trackRelation = trackToRelation(track, bounds);
+        displayRelation(trackRelation);
       } catch (OsmTransferException e) {
         Utils.displayError(e.getMessage());
         return;
       }
-      
-      displayRelation(trackRelation);
+      try {
+        osmRelation = findClosestRelation(trackRelation, bounds);
+        displayRelation(osmRelation);
+      } catch (OsmTransferException e) {
+        Utils.displayError(e.getMessage());
+        return;
+      }
       
     }
     
