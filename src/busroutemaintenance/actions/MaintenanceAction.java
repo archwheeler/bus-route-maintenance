@@ -172,7 +172,7 @@ public class MaintenanceAction extends JosmActiveLayerAction {
     return relation;
   }
   
-  void displayRelation(Relation relation) {
+  void displayRelation(Relation relation, String name) {
     DataSet data = relation.getDataSet();
     for (Relation r : data.getRelations()) {
       if (!r.equals(relation)) {
@@ -200,8 +200,7 @@ public class MaintenanceAction extends JosmActiveLayerAction {
         data.removePrimitive(n);
     }
     
-    OsmDataLayer layer = new OsmDataLayer(data, String.format("%s OSM", activeLayer.getName()),
-                                          null);
+    OsmDataLayer layer = new OsmDataLayer(data, name, null);
     layerManager.addLayer(layer);
   }
   
@@ -233,14 +232,14 @@ public class MaintenanceAction extends JosmActiveLayerAction {
       Bounds bounds = getBounds(track);
       try {
         trackRelation = trackToRelation(track, bounds);
-        displayRelation(trackRelation);
+        displayRelation(trackRelation, "Track relation");
       } catch (OsmTransferException e) {
         Utils.displayError(e.getMessage());
         return;
       }
       try {
         osmRelation = findClosestRelation(trackRelation, bounds);
-        displayRelation(osmRelation);
+        displayRelation(osmRelation, "OSM relation");
       } catch (OsmTransferException e) {
         Utils.displayError(e.getMessage());
         return;
