@@ -7,6 +7,7 @@ import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
@@ -31,6 +32,7 @@ import org.openstreetmap.josm.io.OverpassDownloadReader;
 import org.openstreetmap.josm.tools.Shortcut;
 
 import busroutemaintenance.Maintenance;
+import busroutemaintenance.Match;
 import busroutemaintenance.Utils;
 import busroutemaintenance.dialogs.MaintenanceDialog;
 
@@ -43,6 +45,7 @@ public class MaintenanceAction extends JosmActiveLayerAction {
   private static final String OVERPASS_WAY_QUERY = "way[highway][highway!=service]"
                                                  + "[highway!=footway][highway!=cycleway]"
                                                  + "[highway!=pedestrian][highway!=steps]"
+                                                 + "[highway!=track][highway!=path]"
                                                  + "(%f,%f,%f,%f); (._;>;); out meta;";
   
   private Layer activeLayer;
@@ -124,43 +127,75 @@ public class MaintenanceAction extends JosmActiveLayerAction {
         maxSimilarity = similarity;
         closestRelation = r;
       }
-      System.out.println(String.format("%.2f", similarity));
     }
     return closestRelation;
   }
   
+  Way popLongestMatchingWay(List<WayPoint> points, Collection<Way> ways) {
+    if (points.size() < 2) {
+      points.clear();
+      return null;
+    }
+    double bearing = points.get(0).getCoor().bearing(points.get(1).getCoor());
+    
+    List<Match> matches = new ArrayList<Match>();
+    for (Way w : ways)
+      matches.add(new Match(w));
+    
+    List<Match> badMatches = null;
+    LatLon coor = null;
+    LatLon prevCoor = null;
+    double distance = 0.0;
+    int point = 0;
+    while (point < points.size() && matches.size() > 1) {
+      prevCoor = coor;
+      coor = points.get(point).getCoor();
+      if (prevCoor != null)
+        distance += prevCoor.greatCircleDistance(coor);
+      badMatches = new ArrayList<Match>();
+      for (Match match : matches) {
+        if (!match.matchesPoint(coor))
+          badMatches.add(match);
+      }
+      matches.removeAll(badMatches);
+      ++point;
+    }
+    while (point-- > 0)
+      points.remove(0);
+    if (matches.size() == 1) {
+      return matches.get(0).getWay();
+    } else {
+      Way closestWay = null;
+      double closestDistance = Double.POSITIVE_INFINITY;
+      for (Match m : badMatches) {
+        Way way = m.getWay();
+        double d =  Math.abs(distance - way.getLength());
+        if (m.matchesBearing(bearing) && d < closestDistance) {
+          closestWay = way;
+          closestDistance = d;
+        }
+      }
+      return closestWay;
+    }
+  }
+  
   Relation trackToRelation(IGpxTrack track, Bounds bounds) throws OsmTransferException {
+    List<WayPoint> trackPoints = new LinkedList<WayPoint>();
+    for (IGpxTrackSegment s : track.getSegments()) {
+      for (WayPoint w : s.getWayPoints()) {
+        trackPoints.add(w);
+      }
+    }
     DataSet osmData = getOsmData(bounds, OVERPASS_WAY_QUERY);
     Collection<Way> allWays = osmData.getWays();
     List<Way> relationWays = new ArrayList<Way>();
-    Way previousWay = null;
-    LatLon prevCoor = null;
-    LatLon coor = null;
-    for (IGpxTrackSegment s : track.getSegments()) {
-      for (WayPoint w : s.getWayPoints()) {
-        prevCoor = coor;
-        coor = w.getCoor();
-        double minDistance = Double.POSITIVE_INFINITY;
-        Way closestWay = null;
-        for (Way way : allWays) {
-          for (Node n : way.getNodes()) {
-            double distance = coor.distance(n.getCoor());
-            if (distance < minDistance) {
-              minDistance = distance;
-              closestWay = way;
-            }
-          }
-        }
-        if (!closestWay.equals(previousWay)) {
-          LatLon firstCoor = closestWay.getNode(0).getCoor();
-          LatLon secondCoor = closestWay.getNode(1).getCoor();
-          if (prevCoor == null ||
-              Math.abs(prevCoor.bearing(coor) - firstCoor.bearing(secondCoor)) < Math.PI / 4.0 ||
-              Math.abs(prevCoor.bearing(coor) - secondCoor.bearing(firstCoor)) < Math.PI / 4.0) {
-            relationWays.add(closestWay);
-            previousWay = closestWay;
-          }
-        }
+    Way prevWay = null;
+    
+    while (!trackPoints.isEmpty()) {
+      Way nextWay = popLongestMatchingWay(trackPoints, allWays);
+      if (nextWay != null && !nextWay.equals(prevWay)) {
+        relationWays.add(nextWay);
+        prevWay = nextWay;
       }
     }
     
