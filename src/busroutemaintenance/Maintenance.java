@@ -21,7 +21,10 @@ public class Maintenance {
   }
 
   public Node getStartNode() {
-    return (start != null) ? start.firstNode() : addWays.get(0).firstNode();
+    if (start != null)
+      return start.firstNode();
+    else
+      return end.firstNode();
   }
 
   public void carryOut(Relation relation) {
