@@ -42,7 +42,6 @@ public class MaintenanceLayer extends Layer implements MouseListener {
     this.relation = relation;
     this.map = MainApplication.getMap();
     map.mapView.addMouseListener(this);
-    MainApplication.getLayerManager().addLayer(this);
   }
 
   @Override
