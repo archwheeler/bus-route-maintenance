@@ -251,7 +251,7 @@ public class MaintenanceAction extends JosmActiveLayerAction {
     Step[][] steps = new Step[trackList.size()+1][osmList.size()+1];
     for (int track = 1; track < trackList.size()+1; ++track) {
       for (int osm = 1; osm < osmList.size()+1; ++osm) {
-        int maxScore = 0;
+        int maxScore = Integer.MIN_VALUE;
         Step bestStep = null;
         if (trackList.get(track-1).equals(osmList.get(osm-1)) &&
             scores[track-1][osm-1] + 1 > maxScore) {
