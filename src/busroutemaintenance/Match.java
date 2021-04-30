@@ -8,7 +8,7 @@ import org.openstreetmap.josm.data.osm.Way;
 
 public class Match {
   
-  private static final double DISTANCE_THRESHOLD = 15;
+  private static final double DISTANCE_THRESHOLD = 30;
   private static final double BEARING_THRESHOLD = Math.PI / 9.0;
   
   private Way way;
