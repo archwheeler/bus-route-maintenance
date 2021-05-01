@@ -1,5 +1,6 @@
 package busroutemaintenance;
 
+import java.util.ArrayList;
 import java.util.List;
 import org.openstreetmap.josm.command.ChangeCommand;
 import org.openstreetmap.josm.data.UndoRedoHandler;
@@ -33,26 +34,19 @@ public class Maintenance {
   }
 
   public void carryOut(Relation osmRelation) {
-    List<RelationMember> newMembers = osmRelation.getMembers();
+    List<RelationMember> newMembers = new ArrayList<RelationMember>(osmRelation.getMembers());
     int index = 0;
     if (start != null) {
       while (!newMembers.get(index++).getMember().equals(start));
     }
+    
+    DataSet osmData = osmRelation.getDataSet();
     while (index < newMembers.size() && !newMembers.get(index).getMember().equals(end))
       newMembers.remove(index);
-    DataSet osmData = osmRelation.getDataSet();
-    osmData.beginUpdate();
+    
     for (Way w : addWays) {
-      RelationMember newMember = null;
-      if (osmData.containsWay(w)) {
-        newMember = new RelationMember(null, osmData.getPrimitiveById(w.getOsmPrimitiveId()));
-      } else {
-        for (Node n : w.getNodes())
-          osmData.addPrimitive(n);
-        osmData.addPrimitive(w);
-        newMember = new RelationMember(null, w);
-      }
-      newMembers.add(index, newMember);
+      newMembers.add(index,
+                     new RelationMember(null, osmData.getPrimitiveById(w.getOsmPrimitiveId())));
     }
     
     Relation newRelation = new Relation(osmRelation);
@@ -60,7 +54,6 @@ public class Maintenance {
     ChangeCommand change = new ChangeCommand(osmRelation, newRelation);
     UndoRedoHandler.getInstance().addNoRedraw(change);
     UndoRedoHandler.getInstance().afterAdd(change);
-    osmData.endUpdate();
     
     List<OsmDataLayer> layers = MainApplication.getLayerManager()
                                                .getLayersOfType(OsmDataLayer.class);

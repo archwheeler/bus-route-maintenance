@@ -19,7 +19,7 @@ import org.openstreetmap.josm.data.gpx.IGpxTrack;
 import org.openstreetmap.josm.data.gpx.IGpxTrackSegment;
 import org.openstreetmap.josm.data.gpx.WayPoint;
 import org.openstreetmap.josm.data.osm.DataSet;
-import org.openstreetmap.josm.data.osm.Node;
+import org.openstreetmap.josm.data.osm.OsmPrimitive;
 import org.openstreetmap.josm.data.osm.OsmPrimitiveType;
 import org.openstreetmap.josm.data.osm.Relation;
 import org.openstreetmap.josm.data.osm.RelationMember;
@@ -44,18 +44,20 @@ import busroutemaintenance.gui.MaintenanceLayer;
 public class MaintenanceAction extends JosmActiveLayerAction {
   
   private static final String OVERPASS_SERVER = "https://lz4.overpass-api.de/api/";
-  private static final String OVERPASS_RELATION_QUERY = "relation[type=route][route=bus]"
-                                                      + "(%f,%f,%f,%f); (._;>;); out meta;";
-  private static final String OVERPASS_WAY_QUERY = "way[highway][highway!=service]"
-                                                 + "[highway!=footway][highway!=cycleway]"
-                                                 + "[highway!=pedestrian][highway!=steps]"
-                                                 + "[highway!=track][highway!=path]"
-                                                 + "(%f,%f,%f,%f); (._;>;); out meta;";
+  private static final String OVERPASS_QUERY = "(relation[type=route][route=bus]"
+                                               + "(%f,%f,%f,%f);"
+                                               + "way[highway][highway!=service]"
+                                               + "[highway!=footway][highway!=cycleway]"
+                                               + "[highway!=pedestrian][highway!=steps]"
+                                               + "[highway!=track][highway!=path]"
+                                               + "(%f,%f,%f,%f);); (._;>;); out meta;";
   private static enum Step {MATCH, INSERT, DELETE};
   
   private Layer activeLayer;
-  private Relation trackRelation;
+  private List<Way> trackWays;
   private Relation osmRelation;
+  private DataSet osmData;
+  private Set<OsmPrimitive> usedPrimitives = new HashSet<OsmPrimitive>();
 
   public MaintenanceAction() {
     super(tr("Bus route maintenance"), "maintenance", tr("Bus route maintenance"),
@@ -89,12 +91,13 @@ public class MaintenanceAction extends JosmActiveLayerAction {
   DataSet getOsmData(Bounds bounds, String query) throws OsmTransferException {
     OverpassDownloadReader reader = new OverpassDownloadReader(bounds, OVERPASS_SERVER,
         String.format(query, bounds.getMinLat(), bounds.getMinLon(),
+                             bounds.getMaxLat(), bounds.getMaxLon(),
+                             bounds.getMinLat(), bounds.getMinLon(),
                              bounds.getMaxLat(), bounds.getMaxLon()));
     
     ProgressMonitor monitor = new PleaseWaitProgressMonitor();
     DataSet osmData = reader.parseOsm(monitor);
     monitor.finishTask();
-    
     return osmData;
   }
   
@@ -109,8 +112,8 @@ public class MaintenanceAction extends JosmActiveLayerAction {
     return ways;
   }
   
-  double relationSimilarity(Relation a, Relation b) {
-    Set<Way> setA = new HashSet<Way>(getRelationWays(a));
+  double relationSimilarity(List<Way> a, Relation b) {
+    Set<Way> setA = new HashSet<Way>(a);
     Set<Way> setB = new HashSet<Way>(getRelationWays(b));
     
     Set<Way> intersection = new HashSet<Way>(setA);
@@ -122,17 +125,25 @@ public class MaintenanceAction extends JosmActiveLayerAction {
     return (double) intersection.size() / (double) union.size();
   }
   
-  Relation findClosestRelation(Relation relation, Bounds bounds) throws OsmTransferException {
-    DataSet osmData = getOsmData(bounds, OVERPASS_RELATION_QUERY);
+  Relation findClosestRelation(List<Way> ways, Bounds bounds) {
     double maxSimilarity = Double.NEGATIVE_INFINITY;
     Relation closestRelation = null;
     for (Relation r : osmData.getRelations()) {
-      double similarity = relationSimilarity(relation, r);
+      double similarity = relationSimilarity(ways, r);
       if (similarity > maxSimilarity) {
         maxSimilarity = similarity;
         closestRelation = r;
       }
     }
+    for (RelationMember m : closestRelation.getMembers()) {
+      usedPrimitives.add(m.getMember());
+      OsmPrimitiveType type = m.getType(); 
+      if (type == OsmPrimitiveType.WAY) {
+        Way w = m.getWay();
+        usedPrimitives.addAll(w.getNodes());
+      }
+    }
+    usedPrimitives.add(closestRelation);
     return closestRelation;
   }
   
@@ -184,14 +195,13 @@ public class MaintenanceAction extends JosmActiveLayerAction {
     }
   }
   
-  Relation trackToRelation(IGpxTrack track, Bounds bounds) throws OsmTransferException {
+  List<Way> trackToWays(IGpxTrack track, Bounds bounds) {
     List<WayPoint> trackPoints = new LinkedList<WayPoint>();
     for (IGpxTrackSegment s : track.getSegments()) {
       for (WayPoint w : s.getWayPoints()) {
         trackPoints.add(w);
       }
     }
-    DataSet osmData = getOsmData(bounds, OVERPASS_WAY_QUERY);
     Collection<Way> allWays = osmData.getWays();
     List<Way> relationWays = new ArrayList<Way>();
     Way prevWay = null;
@@ -200,52 +210,24 @@ public class MaintenanceAction extends JosmActiveLayerAction {
       Way nextWay = popLongestMatchingWay(trackPoints, allWays);
       if (nextWay != null && !nextWay.equals(prevWay)) {
         relationWays.add(nextWay);
+        usedPrimitives.add(nextWay);
+        usedPrimitives.addAll(nextWay.getNodes());
         prevWay = nextWay;
       }
     }
     
-    Relation relation = new Relation();
-    for (Way w : relationWays) {
-      relation.addMember(new RelationMember(null, w));
-    }
-    osmData.addPrimitive(relation);
-    return relation;
+    return relationWays;
   }
   
-  void displayRelation(Relation relation, String name) {
-    DataSet data = relation.getDataSet();
-    for (Relation r : data.getRelations()) {
-      if (!r.equals(relation)) {
-        data.removePrimitive(r);
-      }
+  void removeUnusedPrimitives() {
+    for (OsmPrimitive p : osmData.getPrimitives(x -> true)) {
+      if (!usedPrimitives.contains(p))
+        osmData.removePrimitive(p.getOsmPrimitiveId());
     }
-    Set<Way> ways = new HashSet<Way>();
-    Set<Node> nodes = new HashSet<Node>();
-    for (RelationMember m : relation.getMembers()) {
-      OsmPrimitiveType type = m.getType(); 
-      if (type == OsmPrimitiveType.WAY) {
-        Way w = m.getWay();
-        ways.add(w);
-        for (Node n : w.getNodes()) {
-          nodes.add(n);
-        }
-      }
-    }
-    for (Way w : data.getWays()) {
-      if (!ways.contains(w))
-        data.removePrimitive(w);
-    }
-    for (Node n : data.getNodes()) {
-      if (!nodes.contains(n))
-        data.removePrimitive(n);
-    }
-    
-    OsmDataLayer layer = new OsmDataLayer(data, name, null);
-    layerManager.addLayer(layer);
   }
   
   List<Maintenance> computeMaintenance() {
-    List<Way> trackList = getRelationWays(trackRelation);
+    List<Way> trackList = trackWays;
     List<Way> osmList = getRelationWays(osmRelation);
     int[][] scores = new int[trackList.size()+1][osmList.size()+1];
     Step[][] steps = new Step[trackList.size()+1][osmList.size()+1];
@@ -359,19 +341,16 @@ public class MaintenanceAction extends JosmActiveLayerAction {
       IGpxTrack track = activeData.getTracks().iterator().next();
       Bounds bounds = getBounds(track);
       try {
-        trackRelation = trackToRelation(track, bounds);
-        displayRelation(trackRelation, "Track relation");
+        osmData = getOsmData(bounds, OVERPASS_QUERY);
       } catch (OsmTransferException e) {
         Utils.displayError(e.getMessage());
         return;
       }
-      try {
-        osmRelation = findClosestRelation(trackRelation, bounds);
-        displayRelation(osmRelation, "OSM relation");
-      } catch (OsmTransferException e) {
-        Utils.displayError(e.getMessage());
-        return;
-      }
+      trackWays = trackToWays(track, bounds);
+      osmRelation = findClosestRelation(trackWays, bounds);
+      removeUnusedPrimitives();
+      OsmDataLayer layer = new OsmDataLayer(osmData, "OSM data", null);
+      layerManager.addLayer(layer);
       
       List<Maintenance> maintenance = computeMaintenance();
       Layer maintenanceLayer = new MaintenanceLayer(maintenance, osmRelation);
