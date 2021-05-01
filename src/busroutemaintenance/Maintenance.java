@@ -27,8 +27,10 @@ public class Maintenance {
   }
   
   public Node getStartNode() {
-    if (start != null)
-      return start.firstNode();
+    if (addWays.size() > 0)
+      return addWays.get(0).firstNode();
+    else if (start != null)
+      return start.lastNode();
     else
       return end.firstNode();
   }
