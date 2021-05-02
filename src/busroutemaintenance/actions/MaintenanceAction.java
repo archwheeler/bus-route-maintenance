@@ -195,6 +195,22 @@ public class MaintenanceAction extends JosmActiveLayerAction {
     }
   }
   
+  void increaseWayPoints(List<WayPoint> waypoints, int factor) {
+    if (waypoints.size() < 2)
+      return;
+    while (factor-- > 0) {
+      WayPoint previous = waypoints.get(0);
+      for (int i = 1; i < waypoints.size(); ++i) {
+        WayPoint next = waypoints.get(i);
+        LatLon midCoor = new LatLon((previous.lat()+next.lat())/2.0, (previous.lon()+next.lon())/2.0);
+        WayPoint midPoint = new WayPoint(midCoor);
+        waypoints.add(i, midPoint);
+        previous = next;
+        ++i;
+      }
+    }
+  }
+  
   List<Way> trackToWays(IGpxTrack track, Bounds bounds) {
     List<WayPoint> trackPoints = new LinkedList<WayPoint>();
     for (IGpxTrackSegment s : track.getSegments()) {
@@ -202,6 +218,7 @@ public class MaintenanceAction extends JosmActiveLayerAction {
         trackPoints.add(w);
       }
     }
+    increaseWayPoints(trackPoints, 2);
     Collection<Way> allWays = osmData.getWays();
     List<Way> relationWays = new ArrayList<Way>();
     Way prevWay = null;
