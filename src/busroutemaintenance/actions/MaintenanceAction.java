@@ -41,7 +41,7 @@ import busroutemaintenance.dialogs.MaintenanceDialog;
 import busroutemaintenance.gui.MaintenanceLayer;
 
 @SuppressWarnings("serial")
-public class MaintenanceAction extends JosmActiveLayerAction {
+public class MaintenanceAction extends BasicAction {
   
   private static final String OVERPASS_SERVER = "https://lz4.overpass-api.de/api/";
   private static final String OVERPASS_QUERY = "(relation[type=route][route=bus]"

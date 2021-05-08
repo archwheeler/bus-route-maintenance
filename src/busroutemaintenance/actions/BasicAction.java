@@ -16,11 +16,11 @@ import org.openstreetmap.josm.tools.Shortcut;
 import busroutemaintenance.Utils;
 
 @SuppressWarnings("serial")
-public abstract class JosmActiveLayerAction extends JosmAction {
+public abstract class BasicAction extends JosmAction {
   
   public static MainLayerManager layerManager = MainApplication.getLayerManager();
   
-  public JosmActiveLayerAction(String tr, String string, String tr2, Shortcut registerShortcut,
+  public BasicAction(String tr, String string, String tr2, Shortcut registerShortcut,
       boolean b) {
     super(tr, string, tr2, registerShortcut, b);
   }

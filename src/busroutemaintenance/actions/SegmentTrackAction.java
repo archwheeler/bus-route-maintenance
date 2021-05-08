@@ -31,7 +31,7 @@ import busroutemaintenance.dialogs.PlaceMarkerDialog;
 import busroutemaintenance.dialogs.SegmentTrackDialog;
 
 @SuppressWarnings("serial")
-public class SegmentTrackAction extends JosmActiveLayerAction implements MouseListener {
+public class SegmentTrackAction extends BasicAction implements MouseListener {
 
   private static final double MARKER_RANGE = 1e-3;
   private static final double MIN_ROUTE_TIME = 1800.0;

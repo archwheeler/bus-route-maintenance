@@ -17,7 +17,7 @@ import busroutemaintenance.Utils;
 import busroutemaintenance.dialogs.AverageTracksDialog;
 
 @SuppressWarnings("serial")
-public class AverageTracksAction extends JosmActiveLayerAction {
+public class AverageTracksAction extends BasicAction {
   
   private static Color AVERAGE_COLOUR = Color.green;
   private AverageTracksAlgorithm averageTracksAlgorithm = new DivideConquerAverageTracks();
