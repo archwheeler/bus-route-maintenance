@@ -135,6 +135,8 @@ public class MaintenanceAction extends BasicAction {
         closestRelation = r;
       }
     }
+    if (maxSimilarity < 0.5)
+      return null;
     for (RelationMember m : closestRelation.getMembers()) {
       usedPrimitives.add(m.getMember());
       OsmPrimitiveType type = m.getType(); 
@@ -369,11 +371,13 @@ public class MaintenanceAction extends BasicAction {
       OsmDataLayer layer = new OsmDataLayer(osmData, "OSM data", null);
       layerManager.addLayer(layer);
       
+      if (osmRelation != null) {
       List<Maintenance> maintenance = computeMaintenance();
-      Layer maintenanceLayer = new MaintenanceLayer(maintenance, osmRelation);
-      MainLayerManager layerManager = MainApplication.getLayerManager();
-      layerManager.addLayer(maintenanceLayer);
-      layerManager.setActiveLayer(maintenanceLayer);
+        Layer maintenanceLayer = new MaintenanceLayer(maintenance, osmRelation);
+        MainLayerManager layerManager = MainApplication.getLayerManager();
+        layerManager.addLayer(maintenanceLayer);
+        layerManager.setActiveLayer(maintenanceLayer);
+      }
     }
     
     return;
