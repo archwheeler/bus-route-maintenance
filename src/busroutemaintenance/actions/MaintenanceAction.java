@@ -135,7 +135,7 @@ public class MaintenanceAction extends BasicAction {
         closestRelation = r;
       }
     }
-    if (maxSimilarity < 0.5)
+    if (maxSimilarity < 0.2)
       return null;
     for (RelationMember m : closestRelation.getMembers()) {
       usedPrimitives.add(m.getMember());
@@ -197,22 +197,6 @@ public class MaintenanceAction extends BasicAction {
     }
   }
   
-  void increaseWayPoints(List<WayPoint> waypoints, int factor) {
-    if (waypoints.size() < 2)
-      return;
-    while (factor-- > 0) {
-      WayPoint previous = waypoints.get(0);
-      for (int i = 1; i < waypoints.size(); ++i) {
-        WayPoint next = waypoints.get(i);
-        LatLon midCoor = new LatLon((previous.lat()+next.lat())/2.0, (previous.lon()+next.lon())/2.0);
-        WayPoint midPoint = new WayPoint(midCoor);
-        waypoints.add(i, midPoint);
-        previous = next;
-        ++i;
-      }
-    }
-  }
-  
   List<Way> trackToWays(IGpxTrack track, Bounds bounds) {
     List<WayPoint> trackPoints = new LinkedList<WayPoint>();
     for (IGpxTrackSegment s : track.getSegments()) {
@@ -220,7 +204,8 @@ public class MaintenanceAction extends BasicAction {
         trackPoints.add(w);
       }
     }
-    increaseWayPoints(trackPoints, 2);
+    
+    Utils.increaseWayPoints(trackPoints, 1);
     Collection<Way> allWays = osmData.getWays();
     List<Way> relationWays = new ArrayList<Way>();
     Way prevWay = null;
@@ -372,7 +357,7 @@ public class MaintenanceAction extends BasicAction {
       layerManager.addLayer(layer);
       
       if (osmRelation != null) {
-      List<Maintenance> maintenance = computeMaintenance();
+        List<Maintenance> maintenance = computeMaintenance();
         Layer maintenanceLayer = new MaintenanceLayer(maintenance, osmRelation);
         MainLayerManager layerManager = MainApplication.getLayerManager();
         layerManager.addLayer(maintenanceLayer);

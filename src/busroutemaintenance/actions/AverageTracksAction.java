@@ -34,7 +34,7 @@ public class AverageTracksAction extends BasicAction {
   private static int S = 0;
   private static int M = 1;
   private static int D = 2;
-  private static double THRESHOLD = 0.987;
+  private static double THRESHOLD = 1.0;
   private static double MEDIAN_THRESHOLD = 0.05;
   private static int KMEANS_ITERATIONS = 10;
 
@@ -172,7 +172,7 @@ public class AverageTracksAction extends BasicAction {
     
     LatLon[] centres = kMeans(endpoints, 2, KMEANS_ITERATIONS);
     SMD[S] = centres[0];
-    SMD[M] = averageLatLon(removeOutliers(getMidpoints(data)));
+    SMD[M] = averageLatLon((getMidpoints(data)));
     SMD[D] = centres[1];
     
     return SMD;
@@ -188,10 +188,6 @@ public class AverageTracksAction extends BasicAction {
   
   private static List<WayPoint> curveSegment(GpxData data, LatLon s, LatLon d) {
     List<IGpxTrackSegment> segments = data.getTrackSegmentsStream().collect(Collectors.toList());
-    // if the distance from the first waypoint to our provided startpoint s is large, then it is
-    // likely that we have our start and destination the wrong way round.
-    if (segments.get(0).getWayPoints().iterator().next().getCoor().distance(s) > 0.01)
-      return curveSegment(data, d, s);
     List<LatLon> midpoints = getMidpoints(data);
     boolean containsNull = false;
     for (LatLon p : midpoints) {
@@ -202,12 +198,9 @@ public class AverageTracksAction extends BasicAction {
     
     List<WayPoint> curveSegment = new ArrayList<WayPoint>();
     if (m == null) {
-      curveSegment.add(new WayPoint(s));
-      curveSegment.add(new WayPoint(d));
+      return curveSegment;
     } else if (containsNull) {
-      curveSegment.add(new WayPoint(s));
       curveSegment.add(new WayPoint(m));
-      curveSegment.add(new WayPoint(d));
     } else if (cosAngle(s, d, m) < THRESHOLD ||
                cosAngle(d, s, m) < THRESHOLD) {
       GpxData data1 = new GpxData();
@@ -220,31 +213,37 @@ public class AverageTracksAction extends BasicAction {
         boolean beforeMid = true;
         for (WayPoint w : waypoints) {
           if (w.getCoor().equals(mid)) {
-            segment1.add(new WayPoint(w.getCoor()));
+            segment1.add(w);
             beforeMid = false;
           } else if (beforeMid) {
-            segment1.add(new WayPoint(w.getCoor()));
+            segment1.add(w);
           } else {
-            segment2.add(new WayPoint(w.getCoor()));
+            segment2.add(w);
           }
         }
         List<IGpxTrackSegment> segments1 = new ArrayList<IGpxTrackSegment>();
         segments1.add(new GpxTrackSegment(segment1));
-        data1.addTrack(new GpxTrack(segments1, Collections.<String, Object>emptyMap()));
         
         List<IGpxTrackSegment> segments2 = new ArrayList<IGpxTrackSegment>();
         segments2.add(new GpxTrackSegment(segment2));
-        data2.addTrack(new GpxTrack(segments2, Collections.<String, Object>emptyMap()));
+        
+        if (segment1.get(0).getCoor().distance(s) < segment1.get(0).getCoor().distance(d)) {
+          data1.addTrack(new GpxTrack(segments1, Collections.<String, Object>emptyMap()));
+          data2.addTrack(new GpxTrack(segments2, Collections.<String, Object>emptyMap()));
+        } else {
+          data1.addTrack(new GpxTrack(segments2, Collections.<String, Object>emptyMap()));
+          data2.addTrack(new GpxTrack(segments1, Collections.<String, Object>emptyMap()));
+        }
       }
+      
       List<WayPoint> curveSegment1 = curveSegment(data1, s, m);
       List<WayPoint> curveSegment2 = curveSegment(data2, m, d);
       curveSegment.addAll(curveSegment1);
       curveSegment.addAll(curveSegment2);
     } else {
-      curveSegment.add(new WayPoint(s));
       curveSegment.add(new WayPoint(m));
-      curveSegment.add(new WayPoint(d));
     }
+
     return curveSegment;
   }
   
@@ -254,6 +253,20 @@ public class AverageTracksAction extends BasicAction {
     if (data.getTrackSegsCount() < 2)
       throw new IllegalDataException(tr("Not enough segments to compute average"));
     
+    List<IGpxTrackSegment> newSegments = new ArrayList<IGpxTrackSegment>();
+    for (IGpxTrackSegment segment : data.getTrackSegmentsStream().collect(Collectors.toList())) {
+      List<WayPoint> waypoints = new ArrayList<WayPoint>(segment.getWayPoints());
+      Utils.increaseWayPoints(waypoints, 2);
+      newSegments.add(new GpxTrackSegment(waypoints));
+    }
+    
+    data = new GpxData();
+    for (IGpxTrackSegment segment : newSegments) {
+      List<IGpxTrackSegment> segments = new ArrayList<IGpxTrackSegment>();
+      segments.add(segment);
+      data.addTrack(new GpxTrack(segments, Collections.<String, Object>emptyMap()));
+    }
+    
     List<WayPoint> averageSegment = new ArrayList<WayPoint>();
     LatLon[] SMD = lineSegment(data);
     if (SMD[M] == null) {
@@ -261,7 +274,25 @@ public class AverageTracksAction extends BasicAction {
       averageSegment.add(new WayPoint(SMD[D]));
     } else if (cosAngle(SMD[S], SMD[D], SMD[M]) < THRESHOLD ||
                cosAngle(SMD[D], SMD[S], SMD[M]) < THRESHOLD) {
-      averageSegment = curveSegment(data, SMD[S], SMD[D]);
+      List<WayPoint> unsortedSegment = curveSegment(data, SMD[S], SMD[D]);
+      WayPoint last = new WayPoint(SMD[S]);
+      averageSegment.add(last);
+      while (unsortedSegment.size() > 0) {
+        WayPoint closest = null;
+        double minDistance = Double.POSITIVE_INFINITY;
+        for (WayPoint w : unsortedSegment) {
+          if (w.getCoor().distance(last.getCoor()) < minDistance) {
+            closest = w;
+            minDistance = w.getCoor().distance(last.getCoor());
+          }
+        }
+        unsortedSegment.remove(closest);
+        if (minDistance < 0.05) {
+          averageSegment.add(closest);
+          last = closest; 
+        }
+      }
+      averageSegment.add(new WayPoint(SMD[D]));
     } else {
       averageSegment.add(new WayPoint(SMD[S]));
       averageSegment.add(new WayPoint(SMD[M]));
