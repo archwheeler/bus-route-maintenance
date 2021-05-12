@@ -34,7 +34,6 @@ import busroutemaintenance.dialogs.SegmentTrackDialog;
 public class SegmentTrackAction extends BasicAction implements MouseListener {
 
   private static final double MARKER_RANGE = 1e-3;
-  private static final double MIN_ROUTE_TIME = 1800.0;
   private static final double MEDIAN_THRESHOLD = 0.10;
   private static final double MAX_TIMESTEP = 900.0;
   
@@ -44,6 +43,7 @@ public class SegmentTrackAction extends BasicAction implements MouseListener {
   private MapFrame map;
   private Mode mode = Mode.None;
   private boolean isLinear;
+  private int minTime;
   private GpxData activeData;
   private List<LatLon> markers;
 
@@ -72,6 +72,7 @@ public class SegmentTrackAction extends BasicAction implements MouseListener {
       }
       
       isLinear = dlg.isLinear();
+      minTime = dlg.getMinTime();
       
       PlaceMarkerDialog startDlg = new PlaceMarkerDialog(tr("start"));
       if (startDlg.getValue() == 1) {
@@ -117,7 +118,7 @@ public class SegmentTrackAction extends BasicAction implements MouseListener {
       for (WayPoint waypoint : nearMarker) {
         boolean validSplit = true;
         for (WayPoint s : splits) {
-          if (Math.abs(s.getTime() - waypoint.getTime()) <= MIN_ROUTE_TIME) {
+          if (Math.abs(s.getTime() - waypoint.getTime()) <= minTime) {
             validSplit = false;
             break;
           }

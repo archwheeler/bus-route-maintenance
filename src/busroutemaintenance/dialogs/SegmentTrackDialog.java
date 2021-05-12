@@ -10,24 +10,34 @@ import javax.swing.ButtonGroup;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
+import javax.swing.JSpinner;
+import javax.swing.SpinnerModel;
+import javax.swing.SpinnerNumberModel;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+
 import org.openstreetmap.josm.tools.GBC;
 
 @SuppressWarnings("serial")
-public class SegmentTrackDialog extends BasicDialog {
+public class SegmentTrackDialog extends BasicDialog implements ChangeListener {
   
   private final JPanel panel = new JPanel(new GridBagLayout());
-  private final JLabel choiceLabel = new JLabel("Is the GPX track linear or cyclic?",
-                                                JLabel.CENTER);
+  private final JLabel choiceLabel = new JLabel("Route type:", JLabel.CENTER);
   private final JRadioButton linearButton = new JRadioButton("Linear");
-  private final JRadioButton cyclicButton = new JRadioButton("Cyclic");
+  private final JRadioButton repeatingButton = new JRadioButton("Repeating");
   private final ButtonGroup choiceButtons = new ButtonGroup();
+  private final SpinnerModel minTimeModel = new SpinnerNumberModel(30,                  //initial
+                                                                    1,                  //min
+                                                                    Integer.MAX_VALUE,  //max
+                                                                    1);                 //step
+  private final JLabel timeLabel = new JLabel("Route time estimate (minutes):", JLabel.CENTER);
+  private final JSpinner minTimeSpinner = new JSpinner(minTimeModel);
   
-  private boolean isLinear = true;
+  private boolean isLinear = false;
+  private int minTime = 30;
   
   public SegmentTrackDialog(String layerName) {
     super(tr("Segment GPX track"));
-    
-    panel.add(choiceLabel, GBC.eol().fill(GBC.HORIZONTAL));
     
     linearButton.addActionListener(new ActionListener() {
       @Override
@@ -36,21 +46,26 @@ public class SegmentTrackDialog extends BasicDialog {
       }
     });
     
-    cyclicButton.addActionListener(new ActionListener() {
+    repeatingButton.addActionListener(new ActionListener() {
       @Override
       public void actionPerformed(ActionEvent arg0) {
         isLinear = false;
       }
     });
     
-    linearButton.setSelected(true);
+    repeatingButton.setSelected(true);
+    choiceButtons.add(repeatingButton);
     choiceButtons.add(linearButton);
-    choiceButtons.add(cyclicButton);
     
-    JPanel buttons = new JPanel(new GridBagLayout());
-    buttons.add(linearButton);
-    buttons.add(cyclicButton, GBC.eol().fill(GBC.HORIZONTAL));
-    panel.add(buttons);
+    panel.add(choiceLabel, GBC.eol().fill(GBC.HORIZONTAL));
+    JPanel buttons = new JPanel();
+    buttons.add(repeatingButton);
+    buttons.add(linearButton, GBC.eol().fill(GBC.HORIZONTAL));
+    panel.add(buttons, GBC.eol().fill(GBC.HORIZONTAL));
+    
+    minTimeSpinner.addChangeListener(this);
+    panel.add(timeLabel, GBC.eol().fill(GBC.HORIZONTAL));
+    panel.add(minTimeSpinner);
     
     setContent(panel);
     
@@ -59,6 +74,16 @@ public class SegmentTrackDialog extends BasicDialog {
   
   public boolean isLinear() {
     return isLinear;
+  }
+  
+  public int getMinTime() {
+    return minTime;
+  }
+
+  @Override
+  public void stateChanged(ChangeEvent e) {
+    minTime = (Integer) minTimeModel.getValue();
+    System.out.println(minTime);
   }
 
 }
