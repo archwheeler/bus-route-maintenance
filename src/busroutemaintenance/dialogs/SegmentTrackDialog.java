@@ -30,14 +30,14 @@ public class SegmentTrackDialog extends BasicDialog implements ChangeListener {
                                                                     1,                  //min
                                                                     Integer.MAX_VALUE,  //max
                                                                     1);                 //step
-  private final JLabel timeLabel = new JLabel("Route time estimate (minutes):", JLabel.CENTER);
+  private final JLabel timeLabel = new JLabel("Minimum route time (minutes):", JLabel.CENTER);
   private final JSpinner minTimeSpinner = new JSpinner(minTimeModel);
   
   private boolean isLinear = false;
   private int minTime = 30;
   
   public SegmentTrackDialog(String layerName) {
-    super(tr("Segment GPX track"));
+    super(tr("Segment GPS trajectory"));
     
     linearButton.addActionListener(new ActionListener() {
       @Override

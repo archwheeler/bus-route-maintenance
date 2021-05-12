@@ -39,9 +39,9 @@ public class AverageTracksAction extends BasicAction {
   private static int KMEANS_ITERATIONS = 10;
 
   public AverageTracksAction() {
-    super(tr("Average GPX tracks"), "average", tr("Average GPX tracks"),
+    super(tr("Average GPS trajectories"), "average", tr("Average GPS trajectories"),
             Shortcut.registerShortcut("edit:busroutemaintenanceoptions", tr("Edit: {0}",
-            tr("Average GPX tracks")), KeyEvent.CHAR_UNDEFINED, Shortcut.NONE), true);
+            tr("Average GPS trajectories")), KeyEvent.CHAR_UNDEFINED, Shortcut.NONE), true);
   }
   
   private static LatLon[] kMeans(List<LatLon> data, int k, int iterations) {

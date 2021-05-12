@@ -48,9 +48,9 @@ public class SegmentTrackAction extends BasicAction implements MouseListener {
   private List<LatLon> markers;
 
   public SegmentTrackAction() {
-    super(tr("Segment GPX track"), "segment", tr("Segment GPX track"),
+    super(tr("Segment GPS trajectory"), "segment", tr("Segment GPS trajectory"),
         Shortcut.registerShortcut("edit:busroutemaintenanceoptions", tr("Edit: {0}",
-        tr("Segment GPX track")), KeyEvent.CHAR_UNDEFINED, Shortcut.NONE), true);
+        tr("Segment GPS trajectory")), KeyEvent.CHAR_UNDEFINED, Shortcut.NONE), true);
   }
 
   @Override
