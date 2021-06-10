@@ -72,7 +72,7 @@ public class SegmentTrackAction extends BasicAction implements MouseListener {
       }
       
       isLinear = dlg.isLinear();
-      minTime = dlg.getMinTime();
+      minTime = 60 * dlg.getMinTime();
       
       PlaceMarkerDialog startDlg = new PlaceMarkerDialog(tr("start"));
       if (startDlg.getValue() == 1) {
